@@ -210,7 +210,7 @@
     </div>
     <div class="top-bar-right">
       <span class="ai-pill demo" id="aiPill">● Demo Mode</span>
-      <button class="btn btn-ghost btn-sm" onclick="openSettings()" id="settingsBtn" style="padding:6px;">
+      <button class="btn btn-ghost btn-sm" onclick="openSettings()" id="settingsBtn" aria-label="Open settings menu" style="padding:6px;">
         <i data-lucide="settings" style="width:16px;height:16px;"></i>
       </button>
     </div>
@@ -255,9 +255,9 @@
           <button class="quick-btn" onclick="sendQuick('Emergency help')">🚨 Emergency</button>
         </div>
         <div class="chat-input-row">
-          <textarea class="chat-input" id="chatInput" placeholder="Ask ARIA anything… (any language)" rows="1"
+          <textarea class="chat-input" id="chatInput" aria-label="Type your message to ARIA" placeholder="Ask ARIA anything… (any language)" rows="1"
             onkeydown="handleChatKey(event)"></textarea>
-          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <button class="send-btn" id="sendBtn" aria-label="Send message to ARIA" onclick="sendMessage()">
             <i data-lucide="send" style="width:16px;height:16px;color:white;"></i>
           </button>
         </div>
@@ -502,24 +502,24 @@
   </div>
 
   <!-- ── BOTTOM NAV ── -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" onclick="switchPage('aria',this)">
+  <nav class="bottom-nav" role="tablist" aria-label="Application sections">
+    <button class="nav-item active" role="tab" aria-selected="true" aria-controls="page-aria" onclick="switchPage('aria',this)">
       <i data-lucide="bot" style="width:20px;height:20px;"></i>
       <span class="nav-label">ARIA</span>
     </button>
-    <button class="nav-item" onclick="switchPage('match',this)">
+    <button class="nav-item" role="tab" aria-selected="false" aria-controls="page-match" onclick="switchPage('match',this)">
       <i data-lucide="activity" style="width:20px;height:20px;"></i>
       <span class="nav-label">Matchday</span>
     </button>
-    <button class="nav-item" onclick="switchPage('eco',this)">
+    <button class="nav-item" role="tab" aria-selected="false" aria-controls="page-eco" onclick="switchPage('eco',this)">
       <i data-lucide="leaf" style="width:20px;height:20px;"></i>
       <span class="nav-label">EcoScore</span>
     </button>
-    <button class="nav-item" onclick="switchPage('transport',this)">
+    <button class="nav-item" role="tab" aria-selected="false" aria-controls="page-transport" onclick="switchPage('transport',this)">
       <i data-lucide="navigation" style="width:20px;height:20px;"></i>
       <span class="nav-label">Transport</span>
     </button>
-    <button class="nav-item" onclick="switchPage('access',this)">
+    <button class="nav-item" role="tab" aria-selected="false" aria-controls="page-access" onclick="switchPage('access',this)">
       <i data-lucide="accessibility" style="width:20px;height:20px;"></i>
       <span class="nav-label">Access</span>
     </button>
@@ -534,12 +534,12 @@
     <h3 style="margin-bottom:20px;font-size:1.1rem;">⚙️ Settings</h3>
     <div style="display:flex;flex-direction:column;gap:16px;">
       <div>
-        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Gemini API Key</label>
+        <label for="apiKeyInput" style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Gemini API Key</label>
         <input type="password" id="apiKeyInput" class="input" placeholder="AIza..." style="width:100%;font-family:var(--font-mono);font-size:0.8rem;"/>
         <div style="font-size:0.72rem;color:var(--text-tertiary);margin-top:4px;">Stored locally only. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--brand-primary);">Get free key →</a></div>
       </div>
       <div>
-        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Venue</label>
+        <label for="venueSelect" style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Venue</label>
         <select class="input" id="venueSelect" style="width:100%;" onchange="updateVenue(this.value)">
           <option value="met">MetLife Stadium — New York/NJ</option>
           <option value="dal">AT&T Stadium — Dallas, TX</option>
@@ -550,14 +550,14 @@
         </select>
       </div>
       <div>
-        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Role</label>
+        <label for="roleSelect" style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Role</label>
         <select class="input" id="roleSelect" style="width:100%;">
           <option value="fan">Fan</option>
           <option value="volunteer">Volunteer</option>
         </select>
       </div>
       <div>
-        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Backend Server URL</label>
+        <label for="backendUrlInput" style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Backend Server URL</label>
         <input type="text" id="backendUrlInput" class="input" placeholder="https://..." style="width:100%;font-size:0.8rem;"/>
         <div style="font-size:0.7rem;color:var(--text-tertiary);margin-top:4px;">Paste your live backend URL (e.g., ngrok HTTPS link). Leave blank to use current origin.</div>
       </div>
@@ -608,9 +608,13 @@
   // ── Navigation ───────────────────────────────────────────────────
   function switchPage(id, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.getElementById('page-' + id).classList.add('active');
     btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
   }
 
   // ── Chat ─────────────────────────────────────────────────────────
