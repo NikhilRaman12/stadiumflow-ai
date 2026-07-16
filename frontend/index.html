@@ -73,7 +73,7 @@
       background-image: url('assets/hero.png');
       background-size: cover;
       background-position: center;
-      opacity: 0.25;
+      opacity: 0.45;
       filter: saturate(1.5);
     }
 
@@ -977,10 +977,10 @@
       setTimeout(() => toast.remove(), 3500);
     }
 
-    // Show API modal on first visit
+    // Don't show API modal automatically on load, let users enjoy the UI
     window.addEventListener('load', () => {
       const key = localStorage.getItem('stadiumiq_gemini_key');
-      if (!key) setTimeout(() => showApiModal(), 1200);
+      if (key) document.getElementById('apiKeyInput').value = key;
     });
 
     // Animate terminal with typing effect
