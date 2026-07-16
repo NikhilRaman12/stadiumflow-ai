@@ -1,0 +1,93 @@
+[
+  {
+    "id": "met", "name": "MetLife Stadium", "city": "New York/New Jersey", "state": "NJ",
+    "country": "USA", "capacity": 82500, "lat": 40.8135, "lng": -74.0745,
+    "gates": ["A","B","C","D","E","F"],
+    "accessible_gates": ["A","C"],
+    "zones": [
+      {"id":"north","name":"North Stand","capacity":22000,"level":1},
+      {"id":"south","name":"South Stand","capacity":22000,"level":1},
+      {"id":"east","name":"East End Zone","capacity":15000,"level":1},
+      {"id":"west","name":"West End Zone","capacity":15000,"level":1},
+      {"id":"field","name":"Field Level","capacity":5000,"level":0},
+      {"id":"upper","name":"Upper Deck","capacity":3500,"level":3}
+    ],
+    "medical_stations": 8, "concession_stands": 42,
+    "transport": {"metro": "NJ Transit — Meadowlands Station", "bus": "Routes 85, 86, 87", "parking_zones": ["A","B","C","D","E"]},
+    "eco_features": ["Solar panels (2.1MW)", "Rainwater recycling", "EV charging (800 spots)", "Composting stations"]
+  },
+  {
+    "id": "dal", "name": "AT&T Stadium", "city": "Arlington", "state": "TX",
+    "country": "USA", "capacity": 80000, "lat": 32.7480, "lng": -97.0944,
+    "gates": ["1","2","3","4","5","6"],
+    "accessible_gates": ["1","3"],
+    "zones": [
+      {"id":"plaza","name":"Plaza Level","capacity":30000,"level":1},
+      {"id":"club","name":"Club Level","capacity":20000,"level":2},
+      {"id":"suite","name":"Suite Level","capacity":5000,"level":3},
+      {"id":"upper","name":"Upper Bowl","capacity":25000,"level":4}
+    ],
+    "medical_stations": 6, "concession_stands": 38,
+    "transport": {"metro": "TEXRail — CentrePort Station", "bus": "Trinity Metro Routes", "parking_zones": ["P1","P2","P3","P4"]},
+    "eco_features": ["LED lighting (100%)", "Green roof sections", "Water conservation system"]
+  },
+  {
+    "id": "la", "name": "SoFi Stadium", "city": "Inglewood", "state": "CA",
+    "country": "USA", "capacity": 70240, "lat": 33.9534, "lng": -118.3392,
+    "gates": ["North","South","East","West"],
+    "accessible_gates": ["North","South"],
+    "zones": [
+      {"id":"main","name":"Main Concourse","capacity":28000,"level":1},
+      {"id":"club","name":"Club Level","capacity":15000,"level":2},
+      {"id":"terrace","name":"Terrace","capacity":20000,"level":3},
+      {"id":"endzone","name":"End Zone","capacity":7240,"level":1}
+    ],
+    "medical_stations": 7, "concession_stands": 35,
+    "transport": {"metro": "C Line — Inglewood Station", "bus": "LAX Shuttle", "parking_zones": ["P1-P8"]},
+    "eco_features": ["LEED Gold certified", "Solar shade canopy", "EV infrastructure", "Zero single-use plastic"]
+  },
+  {
+    "id": "atz", "name": "Estadio Azteca", "city": "Mexico City", "state": "CDMX",
+    "country": "Mexico", "capacity": 87523, "lat": 19.3030, "lng": -99.1503,
+    "gates": ["Norte","Sur","Este","Oeste"],
+    "accessible_gates": ["Norte","Sur"],
+    "zones": [
+      {"id":"cancha","name":"Cancha","capacity":15000,"level":0},
+      {"id":"graderia","name":"Gradería","capacity":50000,"level":1},
+      {"id":"palco","name":"Palco","capacity":5000,"level":2},
+      {"id":"general","name":"General","capacity":17523,"level":3}
+    ],
+    "medical_stations": 10, "concession_stands": 50,
+    "transport": {"metro": "Metro Línea 2 — Tasqueña", "bus": "Metrobús Línea 3", "parking_zones": ["Norte","Sur","Este"]},
+    "eco_features": ["Biodigestor de residuos", "Paneles solares (1.5MW)", "Captación de agua pluvial"]
+  },
+  {
+    "id": "bc", "name": "BC Place", "city": "Vancouver", "state": "BC",
+    "country": "Canada", "capacity": 54500, "lat": 49.2767, "lng": -123.1115,
+    "gates": ["A","B","C","D"],
+    "accessible_gates": ["A","B"],
+    "zones": [
+      {"id":"main","name":"Main Bowl","capacity":35000,"level":1},
+      {"id":"upper","name":"Upper Bowl","capacity":15000,"level":3},
+      {"id":"club","name":"Club Level","capacity":4500,"level":2}
+    ],
+    "medical_stations": 5, "concession_stands": 28,
+    "transport": {"metro": "SkyTrain — Stadium-Chinatown Station", "bus": "TransLink Routes", "parking_zones": ["Q1","Q2","Q3"]},
+    "eco_features": ["ETFE roof (translucent, saves energy)", "Green building certified", "Bike storage (500+)", "Low-carbon catering"]
+  },
+  {
+    "id": "sf", "name": "Levi's Stadium", "city": "Santa Clara", "state": "CA",
+    "country": "USA", "capacity": 68500, "lat": 37.4032, "lng": -121.9697,
+    "gates": ["A","B","C","D"],
+    "accessible_gates": ["A","C"],
+    "zones": [
+      {"id":"field","name":"Field Level","capacity":18000,"level":0},
+      {"id":"club","name":"Club Level","capacity":25000,"level":1},
+      {"id":"suite","name":"Suite Level","capacity":5500,"level":2},
+      {"id":"upper","name":"Upper Level","capacity":20000,"level":3}
+    ],
+    "medical_stations": 6, "concession_stands": 32,
+    "transport": {"metro": "VTA Light Rail — Great America Station", "bus": "VTA Express", "parking_zones": ["P1-P6"]},
+    "eco_features": ["First LEED Gold certified NFL stadium", "Solar panels (1.186MW)", "EV charging network"]
+  }
+]

@@ -1,0 +1,19 @@
+[
+  {"id":"m01","home":"Mexico","away":"FIFA XI","venue_id":"atz","venue_name":"Estadio Azteca","city":"Mexico City","date":"2026-06-11","time":"20:00","stage":"Group A","match_number":1},
+  {"id":"m02","home":"USA","away":"Serbia","venue_id":"met","venue_name":"MetLife Stadium","city":"New York","date":"2026-06-13","time":"21:00","stage":"Group B","match_number":3},
+  {"id":"m03","home":"Canada","away":"Morocco","venue_id":"bc","venue_name":"BC Place","city":"Vancouver","date":"2026-06-14","time":"18:00","stage":"Group C","match_number":5},
+  {"id":"m04","home":"Brazil","away":"Croatia","venue_id":"dal","venue_name":"AT&T Stadium","city":"Dallas","date":"2026-06-15","time":"20:00","stage":"Group D","match_number":7},
+  {"id":"m05","home":"Argentina","away":"Poland","venue_id":"la","venue_name":"SoFi Stadium","city":"Los Angeles","date":"2026-06-16","time":"21:00","stage":"Group E","match_number":9},
+  {"id":"m06","home":"France","away":"Australia","venue_id":"sf","venue_name":"Levi's Stadium","city":"Santa Clara","date":"2026-06-17","time":"18:00","stage":"Group F","match_number":11},
+  {"id":"m07","home":"England","away":"Algeria","venue_id":"met","venue_name":"MetLife Stadium","city":"New York","date":"2026-06-18","time":"20:00","stage":"Group G","match_number":13},
+  {"id":"m08","home":"Germany","away":"Japan","venue_id":"dal","venue_name":"AT&T Stadium","city":"Dallas","date":"2026-06-19","time":"21:00","stage":"Group H","match_number":15},
+  {"id":"m09","home":"Spain","away":"Netherlands","venue_id":"la","venue_name":"SoFi Stadium","city":"Los Angeles","date":"2026-06-20","time":"18:00","stage":"Group I","match_number":17},
+  {"id":"m10","home":"Portugal","away":"South Korea","venue_id":"bc","venue_name":"BC Place","city":"Vancouver","date":"2026-06-21","time":"20:00","stage":"Group J","match_number":19},
+  {"id":"qf1","home":"TBD","away":"TBD","venue_id":"met","venue_name":"MetLife Stadium","city":"New York","date":"2026-07-03","time":"19:00","stage":"Quarter-Final","match_number":89},
+  {"id":"qf2","home":"TBD","away":"TBD","venue_id":"dal","venue_name":"AT&T Stadium","city":"Dallas","date":"2026-07-04","time":"19:00","stage":"Quarter-Final","match_number":90},
+  {"id":"qf3","home":"TBD","away":"TBD","venue_id":"la","venue_name":"SoFi Stadium","city":"Los Angeles","date":"2026-07-05","time":"19:00","stage":"Quarter-Final","match_number":91},
+  {"id":"qf4","home":"TBD","away":"TBD","venue_id":"atz","venue_name":"Estadio Azteca","city":"Mexico City","date":"2026-07-06","time":"19:00","stage":"Quarter-Final","match_number":92},
+  {"id":"sf1","home":"TBD","away":"TBD","venue_id":"dal","venue_name":"AT&T Stadium","city":"Dallas","date":"2026-07-14","time":"19:00","stage":"Semi-Final","match_number":103},
+  {"id":"sf2","home":"TBD","away":"TBD","venue_id":"la","venue_name":"SoFi Stadium","city":"Los Angeles","date":"2026-07-15","time":"19:00","stage":"Semi-Final","match_number":104},
+  {"id":"final","home":"TBD","away":"TBD","venue_id":"met","venue_name":"MetLife Stadium","city":"New York","date":"2026-07-19","time":"19:00","stage":"FINAL","match_number":104}
+]

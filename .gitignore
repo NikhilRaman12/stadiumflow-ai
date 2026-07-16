@@ -1,0 +1,72 @@
+# ── Python ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+
+# Env files (NEVER commit real keys)
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# ── Database ────────────────────────────────────────────────────────
+*.db
+*.sqlite3
+*.sqlite
+stadiumiq_memory.db
+
+# ── FAISS / ML indices ─────────────────────────────────────────────
+graph_rag/index/
+backend/graph_rag/index/
+*.faiss
+*.index
+
+# ── Node.js ────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+.parcel-cache/
+.next/
+out/
+
+# ── OS ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ── IDE ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── Logs ───────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ── Temp / scratch ─────────────────────────────────────────────────
+backend/write_api_routes.py
+tmp/
+temp/

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>OpsCommand — StadiumIQ · FIFA World Cup 2026</title>
+  <meta name="description" content="Real-time operations command center for FIFA World Cup 2026. AI-powered crowd intelligence, incident management, staff deployment, transport optimization."/>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { background:var(--bg-space); }
+
+    /* ── LAYOUT ── */
+    .ops-layout { display:flex; min-height:100vh; }
+    .sidebar {
+      width:240px; flex-shrink:0;
+      background:var(--bg-surface); border-right:1px solid var(--glass-border);
+      display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto;
+    }
+    .main-area { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+
+    /* ── SIDEBAR ── */
+    .sidebar-brand {
+      padding:20px 16px; border-bottom:1px solid var(--glass-border);
+      font-family:var(--font-display); font-weight:800; font-size:1rem;
+      background:var(--grad-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .sidebar-section { padding:12px 8px 4px 16px; font-size:0.65rem; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.1em; }
+    .sidebar-item {
+      display:flex; align-items:center; gap:10px; padding:10px 16px;
+      cursor:pointer; border-radius:var(--radius-md); margin:1px 8px;
+      font-size:0.875rem; font-weight:500; color:var(--text-secondary); border:none; background:transparent;
+      width:calc(100% - 16px); text-align:left; font-family:var(--font-body); transition:var(--transition-base);
+    }
+    .sidebar-item:hover { background:var(--glass-bg); color:var(--text-primary); }
+    .sidebar-item.active { background:rgba(0,212,255,0.1); color:var(--brand-primary); font-weight:600; }
+    .sidebar-badge { margin-left:auto; font-size:0.65rem; font-weight:700; padding:1px 6px; border-radius:var(--radius-full); }
+
+    /* ── TOP HEADER ── */
+    .ops-header {
+      padding:12px 24px; border-bottom:1px solid var(--glass-border);
+      display:flex; align-items:center; justify-content:space-between;
+      background:rgba(6,9,18,0.8); backdrop-filter:blur(20px); position:sticky; top:0; z-index:40;
+    }
+    .ops-header-title { font-family:var(--font-display); font-size:1.1rem; font-weight:700; }
+    .ops-header-actions { display:flex; gap:8px; align-items:center; }
+
+    /* ── PANELS ── */
+    .panel { display:none; flex-direction:column; flex:1; overflow-y:auto; padding:24px; gap:20px; }
+    .panel.active { display:flex; }
+
+    /* ── KPI ROW ── */
+    .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+
+    /* ── HEATMAP ── */
+    .heatmap-grid {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:6px; padding:16px;
+      background:var(--bg-space); border-radius:var(--radius-xl);
+    }
+    .heatmap-zone {
+      aspect-ratio:1; border-radius:var(--radius-md); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:white;
+      cursor:pointer; transition:var(--transition-base); position:relative;
+    }
+    .heatmap-zone:hover { transform:scale(1.08); z-index:10; box-shadow:var(--shadow-md); }
+    .heatmap-zone .zone-pct { font-family:var(--font-display); font-size:1rem; font-weight:800; }
+    .heatmap-zone .zone-name { font-size:0.58rem; opacity:0.85; }
+
+    /* ── INCIDENT TABLE ── */
+    .incident-table { width:100%; border-collapse:separate; border-spacing:0 4px; }
+    .incident-table th { font-size:0.7rem; font-weight:600; color:var(--text-tertiary); text-align:left; padding:6px 12px; text-transform:uppercase; letter-spacing:0.06em; }
+    .incident-row { background:var(--bg-card); transition:var(--transition-base); cursor:pointer; }
+    .incident-row:hover { background:var(--bg-elevated); }
+    .incident-row td { padding:12px; font-size:0.8rem; }
+    .incident-row td:first-child { border-radius:var(--radius-lg) 0 0 var(--radius-lg); }
+    .incident-row td:last-child  { border-radius:0 var(--radius-lg) var(--radius-lg) 0; }
+
+    /* ── STAFF DEPLOYMENT ── */
+    .staff-zone {
+      background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:14px 16px; display:flex; align-items:center; gap:12px;
+    }
+    .staff-bar { flex:1; }
+    .staff-count { font-family:var(--font-display); font-size:1.4rem; font-weight:700; }
+
+    /* ── A2A STATUS ── */
+    .agent-card {
+      background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:14px 16px; display:flex; align-items:center; gap:12px;
+    }
+    .agent-status-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .agent-status-dot.active { background:var(--status-success); animation:pulse-badge 2s infinite; }
+
+    /* ── CHAT PANEL ── */
+    .ops-chat { display:flex; flex-direction:column; gap:12px; }
+    .ops-chat-msgs { flex:1; min-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+
+    /* ── CHART CONTAINER ── */
+    .chart-wrapper { position:relative; height:220px; }
+
+    /* ── MOBILE ── */
+    @media(max-width:900px) {
+      .sidebar { display:none; }
+      .kpi-row { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body class="bg-grid">
+
+<div class="ops-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">⚡ StadiumIQ<br/><span style="font-size:0.7rem;font-weight:400;color:var(--text-tertiary);-webkit-text-fill-color:var(--text-tertiary);">OpsCommand Center</span></div>
+
+    <div style="padding:12px 8px;">
+      <select class="input" id="venueSelectOps" style="width:100%;font-size:0.8rem;" onchange="switchVenue(this.value)">
+        <option value="met">MetLife Stadium</option>
+        <option value="dal">AT&T Stadium</option>
+        <option value="la">SoFi Stadium</option>
+        <option value="atz">Estadio Azteca</option>
+        <option value="bc">BC Place</option>
+        <option value="sf">Levi's Stadium</option>
+      </select>
+    </div>
+
+    <div class="sidebar-section">Operations</div>
+    <button class="sidebar-item active" onclick="showPanel('overview',this)">
+      <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Overview
+    </button>
+    <button class="sidebar-item" onclick="showPanel('crowd',this)">
+      <i data-lucide="users" style="width:16px;height:16px;"></i> CrowdSense
+      <span class="sidebar-badge" style="background:rgba(245,158,11,0.2);color:var(--status-warning);">MEDIUM</span>
+    </button>
+    <button class="sidebar-item" onclick="showPanel('incidents',this)">
+      <i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Incidents
+      <span class="sidebar-badge" id="incBadge" style="background:rgba(239,68,68,0.2);color:var(--status-danger);">3</span>
+    </button>
+    <button class="sidebar-item" onclick="showPanel('staff',this)">
+      <i data-lucide="hard-hat" style="width:16px;height:16px;"></i> Staff Deploy
+    </button>
+    <button class="sidebar-item" onclick="showPanel('transport',this)">
+      <i data-lucide="navigation" style="width:16px;height:16px;"></i> Transport
+    </button>
+    <button class="sidebar-item" onclick="showPanel('eco',this)">
+      <i data-lucide="leaf" style="width:16px;height:16px;"></i> Sustainability
+    </button>
+
+    <div class="sidebar-section">AI Agents</div>
+    <button class="sidebar-item" onclick="showPanel('agents',this)">
+      <i data-lucide="cpu" style="width:16px;height:16px;"></i> Agent Status
+    </button>
+    <button class="sidebar-item" onclick="showPanel('aria_ops',this)">
+      <i data-lucide="bot" style="width:16px;height:16px;"></i> ARIA Ops Chat
+    </button>
+
+    <div style="flex:1;"></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--glass-border);">
+      <div style="font-size:0.7rem;color:var(--text-tertiary);margin-bottom:6px;">AI Engine</div>
+      <div id="aiStatusOps" class="badge badge-warning" style="width:100%;justify-content:center;">● Demo Mode</div>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="openOpsSettings()">
+        <i data-lucide="key" style="width:12px;height:12px;"></i> API Key
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="main-area">
+
+    <!-- Header -->
+    <div class="ops-header">
+      <div>
+        <div class="ops-header-title" id="panelTitle">📊 Operations Overview</div>
+        <div style="font-size:0.72rem;color:var(--text-tertiary);" id="panelSubtitle">MetLife Stadium · Match Day · USA 2-1 SRB · 67'</div>
+      </div>
+      <div class="ops-header-actions">
+        <span class="badge badge-live"><span class="pulse-dot red" style="display:inline-block;width:6px;height:6px;"></span> LIVE</span>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh</button>
+        <a href="fan-app.html" class="btn btn-outline btn-sm"><i data-lucide="smartphone" style="width:14px;height:14px;"></i> Fan App</a>
+        <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="home" style="width:14px;height:14px;"></i></a>
+      </div>
+    </div>
+
+    <!-- ── PANEL: OVERVIEW ── -->
+    <div class="panel active" id="panel-overview">
+      <!-- KPI row -->
+      <div class="kpi-row">
+        <div class="stat-card cyan">
+          <div class="stat-label">Fans In Stadium</div>
+          <div class="stat-value" id="kpi-fans">74,821</div>
+          <div class="stat-delta up">↑ 91% capacity</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Crowd Risk Level</div>
+          <div class="stat-value" id="kpi-risk" style="font-size:1.2rem;">MEDIUM</div>
+          <div class="stat-delta neutral">→ Stable for 12 min</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-label">Active Incidents</div>
+          <div class="stat-value" id="kpi-incidents">3</div>
+          <div class="stat-delta down">↑ 1 new in last 10 min</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Staff On Duty</div>
+          <div class="stat-value" id="kpi-staff">284</div>
+          <div class="stat-delta neutral">→ All zones covered</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">ARIA Chats</div>
+          <div class="stat-value" id="kpi-chats">6,429</div>
+          <div class="stat-delta up">↑ 28 languages active</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><i data-lucide="activity" style="width:14px;height:14px;color:var(--brand-primary);"></i> Crowd Density — Last 60 Min</span></div>
+          <div class="chart-wrapper"><canvas id="densityChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title"><i data-lucide="pie-chart" style="width:14px;height:14px;color:var(--brand-primary);"></i> Zone Distribution</span></div>
+          <div class="chart-wrapper"><canvas id="zoneChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Active alerts -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i data-lucide="bell" style="width:14px;height:14px;color:var(--brand-gold);"></i> Active AI Alerts</span>
+          <button class="btn btn-ghost btn-sm" onclick="analyzeWithAI()"><i data-lucide="zap" style="width:12px;height:12px;"></i> AI Analysis</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="alertsList">
+          <div class="alert alert-warning"><i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i><div><strong>Gate D Concourse — 82% Capacity</strong><br><span style="font-size:0.8rem;">Redirect additional flow to Gate E (38% load). Deploy 3 stewards. ETA critical: T+8min.</span></div></div>
+          <div class="alert alert-danger"><i data-lucide="alert-circle" style="width:14px;height:14px;flex-shrink:0;"></i><div><strong>Field Level — 91% CRITICAL</strong><br><span style="font-size:0.8rem;">Field level approaching max capacity. Activate overflow protocol. Restrict entry via Gates F1-F3.</span></div></div>
+          <div class="alert alert-info"><i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;"></i><div><strong>Post-Match Transport Pre-Alert</strong><br><span style="font-size:0.8rem;">Match ends in ~23 min. AI recommends activating shuttle overflow NOW. Metro Line 3 surge predicted T+15.</span></div></div>
+        </div>
+        <div id="aiAnalysisResult" style="margin-top:12px;display:none;" class="alert alert-info"></div>
+      </div>
+    </div>
+
+    <!-- ── PANEL: CROWD ── -->
+    <div class="panel" id="panel-crowd">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card" style="grid-column:span 2;">
+          <div class="card-header">
+            <span class="card-title"><i data-lucide="map" style="width:14px;height:14px;color:var(--brand-primary);"></i> Live Stadium Heat Map</span>
+            <span class="badge badge-live">Auto-refresh 10s</span>
+          </div>
+          <div class="heatmap-grid" id="heatmapGrid"><!-- JS-generated --></div>
+          <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+            <span style="font-size:0.72rem;display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#10b981;border-radius:3px;display:inline-block;"></span> Low (&lt;50%)</span>
+            <span style="font-size:0.72rem;display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f59e0b;border-radius:3px;display:inline-block;"></span> Medium (50-75%)</span>
+            <span style="font-size:0.72rem;display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f97316;border-radius:3px;display:inline-block;"></span> High (75-90%)</span>
+            <span style="font-size:0.72rem;display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#ef4444;border-radius:3px;display:inline-block;"></span> Critical (&gt;90%)</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Bottleneck Predictions</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;" id="bottleneckList">
+            <div style="padding:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-lg);">
+              <div style="display:flex;justify-content:space-between;"><span style="font-size:0.8rem;font-weight:600;">Field Level</span><span class="badge badge-danger">CRITICAL</span></div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">91% now → predicted 97% in 15 min</div>
+              <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill danger" style="width:91%;"></div></div>
+            </div>
+            <div style="padding:10px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:var(--radius-lg);">
+              <div style="display:flex;justify-content:space-between;"><span style="font-size:0.8rem;font-weight:600;">Gate D Concourse</span><span class="badge badge-warning">HIGH</span></div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">82% now → predicted 89% in 20 min</div>
+              <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill" style="width:82%;background:var(--brand-orange);"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">AI Recommendations</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;" id="crowdRecs">
+            <div style="display:flex;gap:8px;align-items:flex-start;"><span>🚨</span><span><strong>IMMEDIATE:</strong> Restrict Field Level entry (Gates F1-F3). Activate capacity lock.</span></div>
+            <div style="display:flex;gap:8px;align-items:flex-start;"><span>👮</span><span><strong>T+3min:</strong> Deploy 3 additional stewards to Gate D concourse junction.</span></div>
+            <div style="display:flex;gap:8px;align-items:flex-start;"><span>📢</span><span><strong>T+5min:</strong> PA announcement — redirect fans to Gate E (38% capacity available).</span></div>
+            <div style="display:flex;gap:8px;align-items:flex-start;"><span>🚌</span><span><strong>T+10min:</strong> Pre-activate shuttle overflow Zone D for post-match rush.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL: INCIDENTS ── -->
+    <div class="panel" id="panel-incidents">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div></div>
+        <button class="btn btn-primary btn-sm" onclick="showNewIncidentForm()"><i data-lucide="plus" style="width:14px;height:14px;"></i> Report Incident</button>
+      </div>
+      <div class="card">
+        <table class="incident-table">
+          <thead><tr><th>ID</th><th>Type</th><th>Location</th><th>Severity</th><th>AI Assessment</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="incidentTableBody">
+            <tr class="incident-row"><td><span style="font-family:var(--font-mono);color:var(--brand-primary);">INC-A1F</span></td><td>🏥 Medical</td><td>Gate B, Section 12</td><td><span class="badge badge-warning">3/5 MEDIUM</span></td><td style="font-size:0.75rem;color:var(--text-secondary);">EMS dispatched, AED en route</td><td><span class="badge badge-warning">OPEN</span></td><td><button class="btn btn-ghost btn-sm" onclick="resolveInc('A1F')">Resolve</button></td></tr>
+            <tr class="incident-row"><td><span style="font-family:var(--font-mono);color:var(--brand-primary);">INC-B2C</span></td><td>🔐 Security</td><td>North Stand, Row 44</td><td><span class="badge badge-danger">4/5 HIGH</span></td><td style="font-size:0.75rem;color:var(--text-secondary);">Security team deployed, escalated to duty manager</td><td><span class="badge badge-danger">ACTIVE</span></td><td><button class="btn btn-danger btn-sm">Escalate</button></td></tr>
+            <tr class="incident-row"><td><span style="font-family:var(--font-mono);color:var(--brand-primary);">INC-C3D</span></td><td>👥 Crowd</td><td>Field Level concourse</td><td><span class="badge badge-warning">3/5 MEDIUM</span></td><td style="font-size:0.75rem;color:var(--text-secondary);">Flow redirect initiated, stewards redeployed</td><td><span class="badge badge-warning">OPEN</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+            <tr class="incident-row" style="opacity:0.5;"><td><span style="font-family:var(--font-mono);">INC-D4E</span></td><td>🔧 Facility</td><td>Gate C lift #3</td><td><span class="badge badge-primary">1/5 LOW</span></td><td style="font-size:0.75rem;color:var(--text-secondary);">Maintenance notified, accessible alt: Gate A</td><td><span class="badge badge-success">RESOLVED</span></td><td><span style="font-size:0.75rem;color:var(--text-tertiary);">Closed 14:32</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- New Incident Form -->
+      <div class="card" id="newIncidentForm" style="display:none;">
+        <div class="card-header"><span class="card-title">🚨 Report New Incident</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <textarea id="incDesc" class="input" placeholder="Describe the incident…" rows="3" style="resize:vertical;"></textarea>
+          <input type="text" id="incLoc" class="input" placeholder="Location (e.g. Gate B, Section 12)"/>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-danger" onclick="submitIncident()"><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Submit & AI Assess</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('newIncidentForm').style.display='none'">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL: STAFF ── -->
+    <div class="panel" id="panel-staff">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card" style="grid-column:span 2;">
+          <div class="card-header">
+            <span class="card-title"><i data-lucide="users" style="width:14px;height:14px;color:var(--brand-primary);"></i> AI Staff Deployment Plan</span>
+            <button class="btn btn-primary btn-sm" onclick="reoptimizeStaff()"><i data-lucide="zap" style="width:12px;height:12px;"></i> Reoptimize</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;" id="staffPlanList">
+            <div class="staff-zone"><div style="width:36px;height:36px;border-radius:50%;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="shield-alert" style="width:16px;height:16px;color:var(--status-danger);"></i></div><div class="staff-bar"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;font-weight:700;">Gate D Concourse</span><span class="badge badge-danger">CRITICAL</span></div><div style="font-size:0.72rem;color:var(--text-tertiary);">Crowd Stewards</div><div class="progress-bar" style="margin-top:4px;"><div class="progress-fill danger" style="width:88%;"></div></div></div><div style="text-align:right;"><div class="staff-count" style="color:var(--status-danger);">8</div><div style="font-size:0.65rem;color:var(--text-tertiary);">deployed</div></div></div>
+            <div class="staff-zone"><div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="heart-pulse" style="width:16px;height:16px;color:var(--status-warning);"></i></div><div class="staff-bar"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;font-weight:700;">Medical Station 2</span><span class="badge badge-warning">HIGH</span></div><div style="font-size:0.72rem;color:var(--text-tertiary);">First Aid & Paramedics</div><div class="progress-bar" style="margin-top:4px;"><div class="progress-fill gold" style="width:65%;"></div></div></div><div style="text-align:right;"><div class="staff-count" style="color:var(--status-warning);">3</div><div style="font-size:0.65rem;color:var(--text-tertiary);">deployed</div></div></div>
+            <div class="staff-zone"><div style="width:36px;height:36px;border-radius:50%;background:rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="accessibility" style="width:16px;height:16px;color:var(--brand-emerald);"></i></div><div class="staff-bar"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;font-weight:700;">Gate A Accessible</span><span class="badge badge-success">NORMAL</span></div><div style="font-size:0.72rem;color:var(--text-tertiary);">Accessibility Officers</div><div class="progress-bar" style="margin-top:4px;"><div class="progress-fill green" style="width:40%;"></div></div></div><div style="text-align:right;"><div class="staff-count" style="color:var(--brand-emerald);">2</div><div style="font-size:0.65rem;color:var(--text-tertiary);">deployed</div></div></div>
+            <div class="staff-zone"><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,212,255,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="navigation" style="width:16px;height:16px;color:var(--brand-primary);"></i></div><div class="staff-bar"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;font-weight:700;">Transport Hub</span><span class="badge badge-primary">NORMAL</span></div><div style="font-size:0.72rem;color:var(--text-tertiary);">Transport Liaisons</div><div class="progress-bar" style="margin-top:4px;"><div class="progress-fill cyan" style="width:35%;"></div></div></div><div style="text-align:right;"><div class="staff-count" style="color:var(--brand-primary);">4</div><div style="font-size:0.65rem;color:var(--text-tertiary);">deployed</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Total Staffing</span></div>
+          <div class="chart-wrapper"><canvas id="staffChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Volunteer Briefing AI</span></div>
+          <button class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="generateBriefing()"><i data-lucide="file-text" style="width:14px;height:14px;"></i> Generate Shift Briefing</button>
+          <div id="briefingOutput" style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL: AGENTS ── -->
+    <div class="panel" id="panel-agents">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i data-lucide="cpu" style="width:14px;height:14px;color:var(--brand-primary);"></i> LangGraph Agent Status</span>
+          <span class="badge badge-primary">A2A Bus Active</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="agentStatusList">
+          <div class="agent-card"><div class="agent-status-dot active"></div><div style="flex:1;"><div style="font-size:0.875rem;font-weight:700;">ARIA Fan Assistant</div><div style="font-size:0.72rem;color:var(--text-tertiary);">LangGraph StateGraph · 4 nodes · fan_graph</div></div><span class="badge badge-success">ACTIVE</span></div>
+          <div class="agent-card"><div class="agent-status-dot active"></div><div style="flex:1;"><div style="font-size:0.875rem;font-weight:700;">CrowdSense Intelligence</div><div style="font-size:0.72rem;color:var(--text-tertiary);">LangGraph StateGraph · 5 nodes · crowd_graph</div></div><span class="badge badge-success">ACTIVE</span></div>
+          <div class="agent-card"><div class="agent-status-dot active"></div><div style="flex:1;"><div style="font-size:0.875rem;font-weight:700;">IncidentGuard Response</div><div style="font-size:0.72rem;color:var(--text-tertiary);">LangGraph StateGraph · 4 nodes · incident_graph</div></div><span class="badge badge-success">ACTIVE</span></div>
+          <div class="agent-card"><div class="agent-status-dot active"></div><div style="flex:1;"><div style="font-size:0.875rem;font-weight:700;">FlowRoute Transport</div><div style="font-size:0.72rem;color:var(--text-tertiary);">LangGraph StateGraph · 4 nodes · transport_graph</div></div><span class="badge badge-success">ACTIVE</span></div>
+          <div class="agent-card"><div class="agent-status-dot active"></div><div style="flex:1;"><div style="font-size:0.875rem;font-weight:700;">EcoScore Sustainability</div><div style="font-size:0.72rem;color:var(--text-tertiary);">LangGraph StateGraph · 4 nodes · eco_graph</div></div><span class="badge badge-success">ACTIVE</span></div>
+          <div class="agent-card" style="border-color:rgba(0,212,255,0.3);"><div class="agent-status-dot active"></div><div style="flex:1;"><div style="font-size:0.875rem;font-weight:700;">OpsCommand Supervisor</div><div style="font-size:0.72rem;color:var(--text-tertiary);">LangGraph StateGraph · Supervisor · A2A orchestrator</div></div><span class="badge badge-primary">SUPERVISOR</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">GraphRAG Status</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);">KG Nodes</span><span style="font-weight:700;color:var(--brand-primary);" id="kgNodes">Building…</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);">KG Edges</span><span style="font-weight:700;color:var(--brand-primary);" id="kgEdges">Building…</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);">FAISS Index</span><span class="badge badge-success" id="faissStatus">Active</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);">Vector Dim</span><span style="font-weight:700;">768d</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">MCP Servers</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;">
+            <div style="display:flex;justify-content:space-between;"><span>🏟️ Stadium MCP</span><span class="badge badge-success">Active</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>👥 Crowd MCP</span><span class="badge badge-success">Active</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>🚌 Transport MCP</span><span class="badge badge-success">Active</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>🌱 Eco MCP</span><span class="badge badge-success">Active</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL: ARIA OPS CHAT ── -->
+    <div class="panel" id="panel-aria_ops">
+      <div class="card" style="flex:1;display:flex;flex-direction:column;">
+        <div class="card-header">
+          <span class="card-title"><i data-lucide="bot" style="width:14px;height:14px;color:var(--brand-primary);"></i> ARIA Operations Mode</span>
+          <span class="badge badge-primary">OpsCommand Agent</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="quick-btn" onclick="sendOpsQuery('Current crowd status across all zones?')">👥 Crowd Status</button>
+            <button class="quick-btn" onclick="sendOpsQuery('Deploy additional stewards to Gate D')">👮 Deploy Staff</button>
+            <button class="quick-btn" onclick="sendOpsQuery('Analyze post-match transport risks')">🚌 Transport Risk</button>
+            <button class="quick-btn" onclick="sendOpsQuery('Generate shift briefing for next team')">📋 Briefing</button>
+            <button class="quick-btn" onclick="sendOpsQuery('What is the overall risk level right now?')">⚡ Risk Level</button>
+          </div>
+        </div>
+        <div class="ops-chat-msgs scroll-area" id="opsChatMsgs" style="min-height:250px;max-height:400px;">
+          <div class="msg-row">
+            <div class="msg-avatar ai"><i data-lucide="bot" style="width:12px;height:12px;"></i></div>
+            <div class="chat-bubble ai"><strong>ARIA OpsCommand</strong> online.<br>I have access to all 6 LangGraph agents, GraphRAG stadium knowledge, and live crowd/transport/incident data.<br><br>Ask me about crowd conditions, incident protocols, staff deployment, or any operational matter. 🏟️</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <input type="text" id="opsInput" class="input" placeholder="Ask ARIA Ops…" onkeydown="if(event.key==='Enter')sendOpsQuery()"/>
+          <button class="btn btn-primary" onclick="sendOpsQuery()"><i data-lucide="send" style="width:14px;height:14px;"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER PANELS: transport, eco (simplified) -->
+    <div class="panel" id="panel-transport">
+      <div class="card"><div class="card-header"><span class="card-title">🚌 Transport Flow Monitor</span><span class="badge badge-live">LIVE</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
+          <div class="stat-card cyan"><div class="stat-label">Metro Wait</div><div class="stat-value">12 min</div><div class="stat-delta neutral">Line 3 · 68% load</div></div>
+          <div class="stat-card purple"><div class="stat-label">Shuttle Wait</div><div class="stat-value">6 min</div><div class="stat-delta up">Zone C · 42% ✅</div></div>
+          <div class="stat-card rose"><div class="stat-label">Parking A</div><div class="stat-value">95%</div><div class="stat-delta down">Full — redirect ❌</div></div>
+          <div class="stat-card green"><div class="stat-label">Parking D</div><div class="stat-value">22%</div><div class="stat-delta up">Recommended ✅</div></div>
+        </div>
+        <button class="btn btn-primary" onclick="optimizeTransport()"><i data-lucide="zap" style="width:14px;height:14px;"></i> AI Transport Optimization</button>
+        <div id="transportOptResult" style="margin-top:12px;font-size:0.875rem;color:var(--text-secondary);display:none;"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-eco">
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card green"><div class="stat-label">Avg EcoScore</div><div class="stat-value">68</div><div class="stat-delta up">↑ 12pts today</div></div>
+        <div class="stat-card green"><div class="stat-label">CO₂ Saved</div><div class="stat-value">2.1t</div><div class="stat-delta up">vs baseline</div></div>
+        <div class="stat-card green"><div class="stat-label">Solar Today</div><div class="stat-value">4.2<span style="font-size:1rem;">MWh</span></div></div>
+        <div class="stat-card green"><div class="stat-label">Waste Diverted</div><div class="stat-value">78<span style="font-size:1rem;">%</span></div></div>
+      </div>
+      <div class="card"><div class="card-header"><span class="card-title">🌱 Sustainability KPIs — Match Day</span></div>
+        <div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.8;">
+          ✅ 78% waste diversion rate (target: 70%)<br>
+          ✅ Solar providing 34% of today's stadium power<br>
+          ✅ 12,000L water saved via recycling systems<br>
+          ⚠️ Carbon offset credits needed: 4.2 tonnes<br>
+          🌟 28% of fans used metro/shuttle (up from 22% last match)
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-area -->
+</div><!-- end ops-layout -->
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="opsSettingsModal">
+  <div class="modal">
+    <h3 style="margin-bottom:16px;">⚡ Gemini API Key</h3>
+    <input type="password" id="opsApiKeyInput" class="input" style="width:100%;margin-bottom:12px;font-family:var(--font-mono);" placeholder="AIza…"/>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveOpsKey()">Save & Activate</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('opsSettingsModal').classList.remove('open')">Cancel</button>
+    </div>
+    <div style="margin-top:8px;font-size:0.75rem;color:var(--text-tertiary);text-align:center;"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--brand-primary);">Get free key at Google AI Studio →</a></div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+lucide.createIcons();
+
+let apiKey   = localStorage.getItem('stadiumiq_gemini_key') || '';
+let venueId  = 'met';
+let opsChatHistory = [];
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  updateAIStatus();
+  buildHeatmap();
+  initCharts();
+  fetchHealthStatus();
+  setInterval(updateHeatmap, 8000);
+  setInterval(updateKPIs, 15000);
+});
+
+function updateAIStatus() {
+  const pill = document.getElementById('aiStatusOps');
+  if (apiKey) { pill.textContent='● Gemini Live'; pill.className='badge badge-success'; }
+  else         { pill.textContent='● Demo Mode';   pill.className='badge badge-warning'; }
+}
+
+async function fetchHealthStatus() {
+  try {
+    const r = await fetch('/api/health');
+    if (r.ok) {
+      const d = await r.json();
+      document.getElementById('kgNodes').textContent = d.services?.graphrag?.split(' ')[0] || '250+';
+      document.getElementById('kgEdges').textContent = '400+';
+    }
+  } catch(e) {
+    document.getElementById('kgNodes').textContent = '250+ (offline)';
+  }
+}
+
+// ── Panel Navigation ─────────────────────────────────────────────
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  const titles = {overview:'📊 Operations Overview',crowd:'👥 CrowdSense Intelligence',incidents:'🚨 Incident Management',staff:'👮 Staff Deployment',transport:'🚌 Transport Flow',eco:'🌱 Sustainability',agents:'🤖 Agent Architecture',aria_ops:'💬 ARIA Operations Chat'};
+  document.getElementById('panelTitle').textContent = titles[id] || id;
+  lucide.createIcons();
+}
+
+function switchVenue(v) { venueId = v; updateHeatmap(); showToast(`Switched to ${v.toUpperCase()} venue`,'info'); }
+function refreshAll() { updateHeatmap(); updateKPIs(); showToast('Data refreshed','success'); }
+
+// ── Heat Map ─────────────────────────────────────────────────────
+const ZONES = [
+  {name:'Gate A',d:44},{name:'Gate B',d:62},{name:'Gate C',d:78},{name:'Gate D',d:88},{name:'Gate E',d:38},{name:'Gate F',d:55},
+  {name:'North',d:75},{name:'South',d:58},{name:'East',d:65},{name:'West',d:42},{name:'Club',d:35},{name:'Suite',d:28},
+  {name:'Field',d:91},{name:'Upper',d:40},{name:'Concourse',d:72},{name:'Fan Zone',d:83},{name:'Medical',d:20},{name:'Transport',d:60},
+];
+
+function buildHeatmap() {
+  const grid = document.getElementById('heatmapGrid');
+  if (!grid) return;
+  grid.innerHTML = ZONES.map(z => `
+    <div class="heatmap-zone" style="${zoneStyle(z.d)}" onclick="showToast('${z.name}: ${z.d}% capacity','info')">
+      <div class="zone-pct">${z.d}%</div>
+      <div class="zone-name">${z.name}</div>
+    </div>`).join('');
+}
+
+function zoneStyle(d) {
+  const color = d<50?'rgba(16,185,129,':'d<75?'rgba(245,158,11,':'d<90?'rgba(249,115,22,':'rgba(239,68,68,';
+  const c = d<50?'rgba(16,185,129,0.75)':d<75?'rgba(245,158,11,0.75)':d<90?'rgba(249,115,22,0.8)':'rgba(239,68,68,0.85)';
+  return `background:${c};`;
+}
+
+function updateHeatmap() {
+  ZONES.forEach(z => { z.d = Math.max(10, Math.min(100, z.d + (Math.random()>0.5?Math.random()*5:-Math.random()*3))); z.d = Math.round(z.d); });
+  buildHeatmap();
+}
+
+function updateKPIs() {
+  const fans = Math.round(72000 + Math.random()*6000);
+  document.getElementById('kpi-fans').textContent = fans.toLocaleString();
+  document.getElementById('kpi-chats').textContent = (5800 + Math.round(Math.random()*1000)).toLocaleString();
+}
+
+// ── Charts ───────────────────────────────────────────────────────
+function initCharts() {
+  const labels = Array.from({length:12},(_,i)=>`T-${60-i*5}m`);
+  const densCtx = document.getElementById('densityChart')?.getContext('2d');
+  if (densCtx) new Chart(densCtx, {
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Avg Density',data:[45,48,52,55,60,65,70,72,75,78,82,85],borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',tension:0.4,fill:true,borderWidth:2},
+      {label:'Critical Threshold',data:Array(12).fill(90),borderColor:'rgba(239,68,68,0.5)',borderDash:[5,5],borderWidth:1,pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3c0',boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{color:'#5a6785',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#5a6785',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'},min:0,max:100}}}
+  });
+  const zoneCtx = document.getElementById('zoneChart')?.getContext('2d');
+  if (zoneCtx) new Chart(zoneCtx, {
+    type:'doughnut',
+    data:{labels:['Low','Medium','High','Critical'],datasets:[{data:[6,5,4,3],backgroundColor:['#10b981','#f59e0b','#f97316','#ef4444'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3c0',boxWidth:10,font:{size:10},padding:8}}},cutout:'65%'}
+  });
+  const staffCtx = document.getElementById('staffChart')?.getContext('2d');
+  if (staffCtx) new Chart(staffCtx, {
+    type:'bar',
+    data:{labels:['Security','Medical','Crowd','Access','Transport','Eco'],datasets:[{label:'Staff',data:[85,22,95,12,18,8],backgroundColor:'rgba(0,212,255,0.6)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6785',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#5a6785',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}}}
+  });
+}
+
+// ── AI Actions ────────────────────────────────────────────────────
+async function analyzeWithAI() {
+  const div = document.getElementById('aiAnalysisResult');
+  div.style.display='flex'; div.innerHTML='<div class="spinner"></div> Analyzing all zones with OpsCommand AI…';
+  lucide.createIcons({nodes:[div]});
+  const resp = await getAIText('Analyze the current stadium operations situation. Field Level at 91%, Gate D at 82%. Provide 3 priority actions.');
+  div.innerHTML = `<i data-lucide="zap" style="width:14px;height:14px;flex-shrink:0;"></i><span>${resp.replace(/\n/g,'<br>')}</span>`;
+  lucide.createIcons({nodes:[div]});
+}
+
+async function reoptimizeStaff() {
+  showToast('AI reoptimizing staff deployment…','info');
+  const resp = await getAIText('Optimize staff deployment for current conditions: Field Level 91% critical, Gate D 82%, 3 open incidents.');
+  document.querySelector('#panel-staff .card:first-child').insertAdjacentHTML('beforeend',`<div class="alert alert-info" style="margin-top:12px;"><i data-lucide="zap" style="width:14px;height:14px;flex-shrink:0;"></i><span style="font-size:0.8rem;">${resp.replace(/\n/g,'<br>')}</span></div>`);
+  lucide.createIcons();
+}
+
+async function generateBriefing() {
+  const out = document.getElementById('briefingOutput');
+  out.style.display='block'; out.innerHTML='<div class="spinner"></div>';
+  lucide.createIcons({nodes:[out]});
+  const resp = await getAIText('Generate a volunteer shift briefing for the next team taking over at MetLife Stadium. Match: USA 2-1 SRB, 67 min. Key issues: Field Level critical, Gate D high, 3 open incidents.');
+  out.innerHTML = resp.replace(/\n/g,'<br>');
+}
+
+async function optimizeTransport() {
+  const res = document.getElementById('transportOptResult');
+  res.style.display='block'; res.innerHTML='<div class="spinner" style="margin:0 auto;"></div>';
+  lucide.createIcons({nodes:[res]});
+  const resp = await getAIText('Optimize post-match transport for 74,000 fans at MetLife Stadium. Match ends in 23 min. Metro 68%, Shuttle 42%, Parking A 95%.');
+  res.innerHTML = resp.replace(/\n/g,'<br>');
+}
+
+async function sendOpsQuery(text) {
+  const input = document.getElementById('opsInput');
+  const query = text || input.value.trim();
+  if (!query) return;
+  input.value = '';
+  appendOpsMsg('user','👤 Staff',query);
+  opsChatHistory.push({role:'user',content:query});
+  const msgs = document.getElementById('opsChatMsgs');
+  const typing = document.createElement('div');
+  typing.className='msg-row'; typing.innerHTML='<div class="msg-avatar ai"><i data-lucide="bot" style="width:12px;height:12px;"></i></div><div class="chat-bubble typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  msgs.appendChild(typing); lucide.createIcons({nodes:[typing]}); msgs.scrollTop=msgs.scrollHeight;
+  const resp = await getAIText(`[OPS MODE] ${query}`);
+  typing.remove();
+  appendOpsMsg('ai','🤖 ARIA Ops',resp);
+}
+
+function appendOpsMsg(role, sender, text) {
+  const msgs = document.getElementById('opsChatMsgs');
+  const isUser = role==='user';
+  const div = document.createElement('div');
+  div.className=`msg-row ${isUser?'user':''} animate-fadeInUp`;
+  div.innerHTML=`<div class="msg-avatar ${role}">${isUser?'👤':'<i data-lucide="bot" style="width:12px;height:12px;"></i>'}</div><div class="chat-bubble ${role}">${text.replace(/\n/g,'<br>')}</div>`;
+  msgs.appendChild(div); lucide.createIcons({nodes:[div]}); msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── Incidents ─────────────────────────────────────────────────────
+function showNewIncidentForm() { document.getElementById('newIncidentForm').style.display='block'; }
+async function submitIncident() {
+  const desc = document.getElementById('incDesc').value.trim();
+  const loc  = document.getElementById('incLoc').value.trim();
+  if(!desc) return showToast('Please describe the incident','warning');
+  showToast('AI assessing incident…','info');
+  const resp = await getAIText(`Assess this stadium incident (JSON format): ${desc} at ${loc}`);
+  showToast('Incident logged & AI assessment complete','success');
+  document.getElementById('incBadge').textContent=parseInt(document.getElementById('incBadge').textContent||0)+1;
+  document.getElementById('newIncidentForm').style.display='none';
+}
+
+function resolveInc(id) { showToast(`Incident INC-${id} marked resolved`,'success'); }
+
+// ── Helpers ───────────────────────────────────────────────────────
+async function getAIText(prompt) {
+  const sysPrompt = `You are ARIA, the FIFA WC 2026 stadium OpsCommand AI at ${venueId.toUpperCase()} venue. Be concise, operational, and data-driven.`;
+  if (apiKey) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{role:'user',parts:[{text:`${sysPrompt}\n\n${prompt}`}]}],generationConfig:{temperature:0.5,maxOutputTokens:400}})
+      });
+      const d = await r.json();
+      return d?.candidates?.[0]?.content?.parts?.[0]?.text || simulatedOpsResponse(prompt);
+    } catch(e){ return simulatedOpsResponse(prompt); }
+  }
+  return simulatedOpsResponse(prompt);
+}
+
+function simulatedOpsResponse(q) {
+  q = q.toLowerCase();
+  if (q.includes('crowd'))     return '⚡ CROWD STATUS | Risk: HIGH\nField Level 91% — CRITICAL. Gate D 82% — HIGH. Recommend immediate capacity restrictions at Field gates and steward redeployment from South Stand (58%) to Gate D.\nPredicted peak: T+15 minutes.';
+  if (q.includes('transport')) return '🚌 TRANSPORT OPTIMIZATION\n1. IMMEDIATE: Activate 4 additional shuttle routes Zone D\n2. T+10: Open secondary metro platform (add capacity +2,000/hr)\n3. T+15: Staggered exit broadcast — Sections A-C first\n4. Suspend parking Zone A entry now — redirect to Zone D (22% full)';
+  if (q.includes('briefing'))  return '📋 VOLUNTEER SHIFT BRIEFING — 20:45\nCritical zones: Field Level (91%), Gate D (82%)\nOpen incidents: INC-A1F (Medical), INC-B2C (Security), INC-C3D (Crowd)\nPriority tasks: (1) Gate D crowd steward support (2) Post-match transport activation (3) Field Level entry monitoring\nCommunication: Channel 3 for ops updates. Duty Manager: Sarah Chen';
+  if (q.includes('deploy') || q.includes('staff')) return '👮 STAFF REDEPLOYMENT PLAN\nACTION REQUIRED:\n• Pull 3 stewards from South Stand → Gate D\n• Add 2 paramedics to Medical Station 2\n• Assign 4 transport staff to Shuttle Zone C\nTotal redeployed: 9 staff | Timeline: 5 minutes | Approval needed: Duty Manager';
+  return '⚡ OPS COMMAND ACTIVE\nAll systems operational. 6 LangGraph agents monitoring.\nCurrent risk: HIGH at Field Level · MEDIUM at Gate D\nRecommendation: Activate crowd flow protocol NOW and notify duty manager.';
+}
+
+// ── Settings ─────────────────────────────────────────────────────
+function openOpsSettings() { document.getElementById('opsApiKeyInput').value=apiKey; document.getElementById('opsSettingsModal').classList.add('open'); }
+function saveOpsKey() { apiKey=document.getElementById('opsApiKeyInput').value.trim(); if(apiKey)localStorage.setItem('stadiumiq_gemini_key',apiKey); updateAIStatus(); document.getElementById('opsSettingsModal').classList.remove('open'); showToast('API key saved — Gemini AI active!','success'); }
+
+function showToast(msg, type='info') {
+  const icons={success:'check-circle',warning:'alert-triangle',danger:'alert-circle',info:'info'};
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.innerHTML=`<i data-lucide="${icons[type]}" style="width:14px;height:14px;flex-shrink:0;"></i> ${msg}`;
+  document.getElementById('toastContainer').appendChild(t); lucide.createIcons({nodes:[t]});
+  setTimeout(()=>t.remove(),3500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StadiumIQ — GenAI Platform · FIFA World Cup 2026</title>
+  <meta name="description" content="StadiumIQ is a next-generation GenAI platform powering FIFA World Cup 2026 stadium operations, fan experience, crowd management, accessibility, and real-time AI intelligence for all 16 venues." />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    /* ── LANDING PAGE SPECIFIC STYLES ── */
+
+    body { background: var(--bg-space); overflow-x: hidden; }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: var(--z-overlay);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(6, 9, 18, 0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      transition: var(--transition-base);
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-display);
+      font-size: 1.4rem; font-weight: 800;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-brand-icon {
+      width: 36px; height: 36px;
+      background: var(--grad-primary);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--glow-cyan);
+    }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: var(--text-secondary);
+      transition: var(--transition-fast);
+    }
+
+    .nav-links a:hover { color: var(--text-primary); }
+
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      position: relative;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 100px 48px 80px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-image: url('assets/hero.png');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.25;
+      filter: saturate(1.5);
+    }
+
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, rgba(0,212,255,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.1) 0%, transparent 50%),
+                  linear-gradient(to bottom, transparent 50%, var(--bg-space) 100%);
+    }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,212,255,0.15), transparent 70%);
+      top: -100px; left: -100px;
+      animation: floatY 8s ease-in-out infinite;
+    }
+
+    .orb-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(124,58,237,0.15), transparent 70%);
+      bottom: -100px; right: -100px;
+      animation: floatY 10s ease-in-out infinite reverse;
+    }
+
+    .orb-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(251,191,36,0.1), transparent 70%);
+      top: 30%; left: 30%;
+      animation: floatY 6s ease-in-out infinite 2s;
+    }
+
+    .hero-content {
+      position: relative; z-index: 1;
+      max-width: 900px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 20px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      border-radius: var(--radius-full);
+      font-size: 0.75rem; font-weight: 600;
+      color: var(--brand-primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-6);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      background: var(--brand-primary);
+      border-radius: 50%;
+      animation: pulse-badge 2s infinite;
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 7vw, 5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: var(--space-6);
+    }
+
+    .hero-title-gradient {
+      background: var(--grad-primary);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 4s ease infinite;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 680px;
+      margin: 0 auto var(--space-10);
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      display: flex; align-items: center; justify-content: center;
+      gap: var(--space-4); flex-wrap: wrap;
+      margin-bottom: var(--space-16);
+    }
+
+    .hero-stats {
+      display: flex; align-items: center; justify-content: center;
+      gap: var(--space-8); flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-val {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 800;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-stat-label {
+      font-size: 0.75rem; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-top: 2px;
+    }
+
+    .hero-stat-divider {
+      width: 1px; height: 40px;
+      background: var(--glass-border);
+    }
+
+    /* ── FLOATING CARDS ── */
+    .floating-preview {
+      position: absolute; z-index: 1;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      pointer-events: none;
+    }
+
+    .floating-preview.left {
+      left: 5%; top: 35%;
+      animation: floatY 5s ease-in-out infinite;
+    }
+
+    .floating-preview.right {
+      right: 5%; top: 45%;
+      animation: floatY 7s ease-in-out infinite 1s;
+    }
+
+    .floating-stat {
+      font-family: var(--font-display);
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--brand-primary);
+    }
+
+    .floating-label { color: var(--text-tertiary); font-size: 0.7rem; }
+
+    /* ── SECTION ── */
+    .section { padding: 100px 48px; max-width: 1400px; margin: 0 auto; }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: var(--space-16);
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800;
+      margin-bottom: var(--space-4);
+    }
+
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── ROLE SELECTOR ── */
+    .role-selector-section {
+      padding: 80px 48px;
+      background: radial-gradient(ellipse at center, rgba(0,212,255,0.04) 0%, transparent 70%);
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-6);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .role-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      cursor: pointer;
+      transition: var(--transition-spring);
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--card-gradient);
+      opacity: 0;
+      transition: var(--transition-base);
+      border-radius: inherit;
+    }
+
+    .role-card:hover::before { opacity: 1; }
+
+    .role-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--card-shadow);
+      border-color: var(--card-color);
+    }
+
+    .role-card-fan    { --card-color: var(--brand-primary);    --card-gradient: var(--grad-cyan-purple); --card-shadow: var(--glow-cyan); }
+    .role-card-org    { --card-color: var(--brand-secondary);  --card-gradient: rgba(124,58,237,0.08);   --card-shadow: var(--glow-purple); }
+    .role-card-vol    { --card-color: var(--brand-emerald);    --card-gradient: rgba(16,185,129,0.08);   --card-shadow: var(--glow-emerald); }
+    .role-card-staff  { --card-color: var(--brand-gold);       --card-gradient: rgba(251,191,36,0.08);   --card-shadow: var(--glow-gold); }
+
+    .role-icon-wrapper {
+      width: 64px; height: 64px;
+      border-radius: var(--radius-xl);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: var(--space-5);
+      position: relative;
+      z-index: 1;
+    }
+
+    .role-card-fan   .role-icon-wrapper { background: rgba(0,212,255,0.15);   color: var(--brand-primary); }
+    .role-card-org   .role-icon-wrapper { background: rgba(124,58,237,0.15); color: var(--brand-secondary); }
+    .role-card-vol   .role-icon-wrapper { background: rgba(16,185,129,0.15); color: var(--brand-emerald); }
+    .role-card-staff .role-icon-wrapper { background: rgba(251,191,36,0.15); color: var(--brand-gold); }
+
+    .role-title {
+      font-family: var(--font-display);
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      position: relative; z-index: 1;
+    }
+
+    .role-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--space-6);
+      position: relative; z-index: 1;
+    }
+
+    .role-features {
+      list-style: none;
+      display: flex; flex-direction: column; gap: var(--space-2);
+      margin-bottom: var(--space-6);
+      position: relative; z-index: 1;
+    }
+
+    .role-feature {
+      display: flex; align-items: center; gap: var(--space-2);
+      font-size: 0.8rem; color: var(--text-secondary);
+    }
+
+    .role-feature-dot {
+      width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .role-card-fan   .role-feature-dot { background: var(--brand-primary); }
+    .role-card-org   .role-feature-dot { background: var(--brand-secondary); }
+    .role-card-vol   .role-feature-dot { background: var(--brand-emerald); }
+    .role-card-staff .role-feature-dot { background: var(--brand-gold); }
+
+    .role-cta {
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 1;
+    }
+
+    .role-link {
+      font-size: 0.875rem; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .role-card-fan   .role-link { color: var(--brand-primary); }
+    .role-card-org   .role-link { color: var(--brand-secondary); }
+    .role-card-vol   .role-link { color: var(--brand-emerald); }
+    .role-card-staff .role-link { color: var(--brand-gold); }
+
+    /* ── FEATURES GRID ── */
+    .features-section {
+      padding: 80px 48px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      transition: var(--transition-base);
+      display: flex; flex-direction: column; gap: var(--space-3);
+    }
+
+    .feature-card:hover {
+      border-color: rgba(0,212,255,0.2);
+      background: var(--bg-elevated);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .feature-name {
+      font-family: var(--font-display);
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .feature-desc {
+      font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;
+    }
+
+    .feature-tag {
+      font-size: 0.7rem; font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-top: auto;
+    }
+
+    /* ── AI SHOWCASE ── */
+    .ai-showcase {
+      padding: 80px 48px;
+      max-width: 1400px; margin: 0 auto;
+    }
+
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      align-items: center;
+    }
+
+    .showcase-terminal {
+      background: var(--bg-space);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .terminal-header {
+      background: var(--bg-surface);
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .terminal-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+
+    .terminal-dot:nth-child(1) { background: #ef4444; }
+    .terminal-dot:nth-child(2) { background: #f59e0b; }
+    .terminal-dot:nth-child(3) { background: #10b981; }
+
+    .terminal-title {
+      font-size: 0.75rem; color: var(--text-tertiary);
+      margin-left: 8px;
+    }
+
+    .terminal-body {
+      padding: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.8;
+    }
+
+    .t-prompt { color: var(--brand-primary); }
+    .t-text   { color: var(--text-secondary); }
+    .t-res    { color: var(--brand-emerald); }
+    .t-warn   { color: var(--brand-gold); }
+    .t-alert  { color: var(--brand-rose); }
+    .t-cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--brand-primary);
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── API KEY MODAL ── */
+    .api-key-modal {
+      position: fixed; inset: 0;
+      background: rgba(6, 9, 18, 0.92);
+      backdrop-filter: blur(12px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+
+    .api-key-box {
+      background: var(--bg-elevated);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: var(--radius-2xl);
+      padding: 48px;
+      max-width: 520px; width: 100%;
+      box-shadow: var(--glow-cyan), var(--shadow-xl);
+      animation: scaleIn 0.4s var(--transition-spring);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 48px;
+      border-top: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: var(--space-4);
+    }
+
+    .footer-brand {
+      font-family: var(--font-display);
+      font-weight: 700;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer-copy { font-size: 0.8rem; color: var(--text-tertiary); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .roles-grid { grid-template-columns: repeat(2, 1fr); }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .showcase-grid { grid-template-columns: 1fr; }
+      .nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .roles-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .hero { padding: 100px 24px 80px; }
+      .section, .role-selector-section, .features-section { padding: 60px 24px; }
+      .hero-stat-divider { display: none; }
+      .floating-preview { display: none; }
+    }
+  </style>
+</head>
+<body class="bg-grid">
+
+  <!-- ── NAV ── -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="nav-brand-icon">
+        <i data-lucide="zap" style="width:20px;height:20px;color:white;"></i>
+      </div>
+      StadiumIQ
+    </div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#roles">Who It's For</a></li>
+      <li><a href="#ai-demo">AI Demo</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn btn-outline btn-sm" onclick="showApiModal()">
+        <i data-lucide="key" style="width:14px;height:14px;"></i>
+        API Key
+      </button>
+      <a href="fan-app.html" class="btn btn-primary btn-sm">
+        <i data-lucide="play" style="width:14px;height:14px;"></i>
+        Launch App
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-orb orb-3"></div>
+
+    <!-- Floating preview cards -->
+    <div class="floating-preview left">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div class="pulse-dot green"></div>
+        <span style="font-size:0.7rem;color:var(--text-tertiary);">CROWD ALERT</span>
+      </div>
+      <div class="floating-stat">82%</div>
+      <div class="floating-label">Gate D Capacity</div>
+    </div>
+
+    <div class="floating-preview right">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div class="pulse-dot cyan"></div>
+        <span style="font-size:0.7rem;color:var(--text-tertiary);">ARIA ACTIVE</span>
+      </div>
+      <div class="floating-stat">32</div>
+      <div class="floating-label">Languages Supported</div>
+    </div>
+
+    <div class="hero-content animate-fadeInUp">
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        ⚡ Live · FIFA World Cup 2026 · 16 Venues · 3 Countries
+      </div>
+
+      <h1 class="hero-title">
+        The AI Brain Behind<br />
+        <span class="hero-title-gradient">Every Matchday</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        StadiumIQ is a next-generation GenAI platform unifying crowd intelligence,
+        fan experience, accessibility, sustainability, and real-time operational command
+        for 3.4M fans across 16 FIFA World Cup 2026 stadiums.
+      </p>
+
+      <div class="hero-cta">
+        <a href="fan-app.html" class="btn btn-primary btn-xl">
+          <i data-lucide="smartphone" style="width:20px;height:20px;"></i>
+          Fan Experience App
+        </a>
+        <a href="ops-dashboard.html" class="btn btn-outline btn-xl">
+          <i data-lucide="layout-dashboard" style="width:20px;height:20px;"></i>
+          Operations Command
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-val">16</div>
+          <div class="hero-stat-label">Stadiums</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">104</div>
+          <div class="hero-stat-label">Matches</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">3.4M</div>
+          <div class="hero-stat-label">Fans</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">7</div>
+          <div class="hero-stat-label">AI Modules</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">32</div>
+          <div class="hero-stat-label">Languages</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ROLE SELECTOR ── -->
+  <section class="role-selector-section" id="roles">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="section-header">
+        <div class="section-badge">
+          <i data-lucide="users" style="width:12px;height:12px;"></i>
+          Choose Your Role
+        </div>
+        <h2 class="section-title">One Platform, <span class="hero-title-gradient">Four Experiences</span></h2>
+        <p class="section-desc">
+          Tailored AI experiences for every stakeholder — from fans discovering their seat
+          to operations directors managing 80,000-person venues.
+        </p>
+      </div>
+
+      <div class="roles-grid stagger">
+
+        <!-- FAN -->
+        <a href="fan-app.html?role=fan" class="role-card role-card-fan animate-fadeInUp">
+          <div class="role-icon-wrapper">
+            <i data-lucide="star" style="width:28px;height:28px;"></i>
+          </div>
+          <div class="role-title">🎉 Fan</div>
+          <div class="role-desc">Your personal AI matchday companion — navigation, queues, entertainment, and more.</div>
+          <ul class="role-features">
+            <li class="role-feature"><div class="role-feature-dot"></div>ARIA multilingual AI assistant</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Real-time queue predictions</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Accessible route finder</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Eco carbon tracker</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Personalized itinerary</li>
+          </ul>
+          <div class="role-cta">
+            <span class="badge badge-primary">Fan App</span>
+            <span class="role-link">Enter <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></span>
+          </div>
+        </a>
+
+        <!-- ORGANIZER -->
+        <a href="ops-dashboard.html?role=organizer" class="role-card role-card-org animate-fadeInUp">
+          <div class="role-icon-wrapper">
+            <i data-lucide="bar-chart-3" style="width:28px;height:28px;"></i>
+          </div>
+          <div class="role-title">📊 Organizer</div>
+          <div class="role-desc">Real-time situational awareness and AI-driven decision support for tournament directors.</div>
+          <ul class="role-features">
+            <li class="role-feature"><div class="role-feature-dot"></div>CrowdSense heat maps</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Predictive incident alerts</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Transport flow optimizer</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>KPI command center</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>AI report generator</li>
+          </ul>
+          <div class="role-cta">
+            <span class="badge badge-purple">Ops Dashboard</span>
+            <span class="role-link">Enter <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></span>
+          </div>
+        </a>
+
+        <!-- VOLUNTEER -->
+        <a href="fan-app.html?role=volunteer" class="role-card role-card-vol animate-fadeInUp">
+          <div class="role-icon-wrapper">
+            <i data-lucide="hand-helping" style="width:28px;height:28px;"></i>
+          </div>
+          <div class="role-title">🤝 Volunteer</div>
+          <div class="role-desc">Smart briefing system, real-time task routing, and AI-powered guidance for field volunteers.</div>
+          <ul class="role-features">
+            <li class="role-feature"><div class="role-feature-dot"></div>AI shift briefing generator</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Zone assignment optimizer</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Accessibility guide tools</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Incident reporting AI</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Fan query AI assistant</li>
+          </ul>
+          <div class="role-cta">
+            <span class="badge badge-success">Volunteer Mode</span>
+            <span class="role-link">Enter <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></span>
+          </div>
+        </a>
+
+        <!-- VENUE STAFF -->
+        <a href="ops-dashboard.html?role=staff" class="role-card role-card-staff animate-fadeInUp">
+          <div class="role-icon-wrapper">
+            <i data-lucide="shield-check" style="width:28px;height:28px;"></i>
+          </div>
+          <div class="role-title">🏟️ Venue Staff</div>
+          <div class="role-desc">Operational intelligence for security, facilities, medical, and logistics teams on the ground.</div>
+          <ul class="role-features">
+            <li class="role-feature"><div class="role-feature-dot"></div>Staff deployment AI</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Security alert routing</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Medical triage support</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Facility status tracker</li>
+            <li class="role-feature"><div class="role-feature-dot"></div>Emergency AI protocols</li>
+          </ul>
+          <div class="role-cta">
+            <span class="badge badge-gold">Staff Portal</span>
+            <span class="role-link">Enter <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES GRID ── -->
+  <section class="features-section" id="features">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="section-header">
+        <div class="section-badge">
+          <i data-lucide="cpu" style="width:12px;height:12px;"></i>
+          AI Modules
+        </div>
+        <h2 class="section-title">7 GenAI Engines, <span class="hero-title-gradient">One Platform</span></h2>
+        <p class="section-desc">Each module powered by Gemini 1.5 Pro — working in concert to deliver intelligent experiences.</p>
+      </div>
+
+      <div class="features-grid stagger">
+
+        <div class="feature-card animate-fadeInUp">
+          <div class="feature-icon" style="background:rgba(0,212,255,0.15);">
+            <i data-lucide="message-circle" style="width:22px;height:22px;color:var(--brand-primary);"></i>
+          </div>
+          <div class="feature-name">ARIA — AI Assistant</div>
+          <div class="feature-desc">Gemini-powered conversational assistant supporting 32 languages. Stadium navigation, FAQs, services, emergency guidance — all in real time.</div>
+          <div class="feature-tag">🧭 Multilingual · Contextual · Voice-ready</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp">
+          <div class="feature-icon" style="background:rgba(124,58,237,0.15);">
+            <i data-lucide="activity" style="width:22px;height:22px;color:var(--brand-secondary);"></i>
+          </div>
+          <div class="feature-name">CrowdSense — Intelligence</div>
+          <div class="feature-desc">Predictive crowd density analysis with 45-minute lookahead. AI-generated bottleneck alerts and automated staff redeployment suggestions.</div>
+          <div class="feature-tag">👥 Predictive · Zone-aware · Real-time</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp">
+          <div class="feature-icon" style="background:rgba(16,185,129,0.15);">
+            <i data-lucide="accessibility" style="width:22px;height:22px;color:var(--brand-emerald);"></i>
+          </div>
+          <div class="feature-name">AccessPath — Inclusive Nav</div>
+          <div class="feature-desc">Wheelchair-accessible route planning with real-time obstacle awareness. Quiet zones, sign language guides, and emergency evacuation support.</div>
+          <div class="feature-tag">♿ Inclusive · WCAG · Multi-ability</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp">
+          <div class="feature-icon" style="background:rgba(59,130,246,0.15);">
+            <i data-lucide="navigation" style="width:22px;height:22px;color:#3b82f6;"></i>
+          </div>
+          <div class="feature-name">FlowRoute — Transport AI</div>
+          <div class="feature-desc">Dynamic transport optimization — shuttle load balancing, smart parking assignment, post-match dispersal simulation, hotel-to-stadium routing.</div>
+          <div class="feature-tag">🚌 Multimodal · Predictive · City-scale</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp">
+          <div class="feature-icon" style="background:rgba(16,185,129,0.12);">
+            <i data-lucide="leaf" style="width:22px;height:22px;color:#34d399;"></i>
+          </div>
+          <div class="feature-name">EcoScore — Sustainability</div>
+          <div class="feature-desc">Real-time carbon footprint tracking per fan journey. Eco-friendly concession recommendations, waste diversion analytics, and stadium energy AI.</div>
+          <div class="feature-tag">🌱 Green · SDG-aligned · Impact-tracked</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp">
+          <div class="feature-icon" style="background:rgba(251,191,36,0.15);">
+            <i data-lucide="mic" style="width:22px;height:22px;color:var(--brand-gold);"></i>
+          </div>
+          <div class="feature-name">FanPulse — Personalization</div>
+          <div class="feature-desc">AI match commentary summarizer, personalized itinerary builder, queue time predictions for concessions and restrooms, and highlight moments.</div>
+          <div class="feature-tag">🎙️ Personalized · Contextual · Social</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp" style="background: var(--grad-cyan-purple); border-color: rgba(0,212,255,0.2);">
+          <div class="feature-icon" style="background:rgba(0,0,0,0.2);">
+            <i data-lucide="shield" style="width:22px;height:22px;color:white;"></i>
+          </div>
+          <div class="feature-name" style="color:white;">OpsCommand — Intelligence</div>
+          <div class="feature-desc" style="color:rgba(255,255,255,0.7);">AI-powered staff deployment optimization, incident prediction scoring, real-time KPI anomaly detection, and auto-generated volunteer briefings.</div>
+          <div class="feature-tag" style="color:rgba(255,255,255,0.5);">🏟️ Operational · Predictive · Command</div>
+        </div>
+
+        <div class="feature-card animate-fadeInUp" style="grid-column: span 2;">
+          <div style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="feature-icon" style="background:rgba(244,63,94,0.15);flex-shrink:0;">
+              <i data-lucide="globe" style="width:22px;height:22px;color:var(--brand-rose);"></i>
+            </div>
+            <div>
+              <div class="feature-name">Gemini 1.5 Pro — Core AI Engine</div>
+              <div class="feature-desc">All 7 modules are powered by Google Gemini 1.5 Pro with custom system prompts, RAG over stadium knowledge bases, and multi-turn contextual reasoning. Structured outputs ensure reliable data pipelines. Multilingual by default — just ask ARIA in any language.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AI TERMINAL DEMO ── -->
+  <section class="ai-showcase" id="ai-demo">
+    <div class="showcase-grid">
+      <div>
+        <div class="section-badge">
+          <i data-lucide="zap" style="width:12px;height:12px;"></i>
+          Live AI Demo
+        </div>
+        <h2 class="section-title" style="text-align:left;">See ARIA in<br /><span class="hero-title-gradient">Action</span></h2>
+        <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:var(--space-8);">
+          ARIA processes fan queries in 32 languages, cross-references live stadium data,
+          and delivers actionable, context-aware responses in milliseconds — powered by Gemini 1.5 Pro.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+          <div class="alert alert-info">
+            <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0;"></i>
+            <span>ARIA is live in the Fan App — launch it to interact in real time with your Gemini API key.</span>
+          </div>
+        </div>
+        <div style="margin-top:var(--space-6);display:flex;gap:var(--space-3);">
+          <a href="fan-app.html" class="btn btn-primary">
+            <i data-lucide="message-circle" style="width:16px;height:16px;"></i>
+            Chat with ARIA
+          </a>
+          <a href="ops-dashboard.html" class="btn btn-ghost">
+            <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i>
+            View OpsCommand
+          </a>
+        </div>
+      </div>
+
+      <div class="showcase-terminal">
+        <div class="terminal-header">
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <span class="terminal-title">ARIA · StadiumIQ AI Engine · Gemini 1.5 Pro</span>
+        </div>
+        <div class="terminal-body" id="terminal-output">
+          <div><span class="t-prompt">ARIA</span> <span class="t-text">Initializing StadiumIQ Intelligence Layer...</span></div>
+          <div><span class="t-res">✓</span> <span class="t-text">Gemini 1.5 Pro connected</span></div>
+          <div><span class="t-res">✓</span> <span class="t-text">Stadium KB loaded (16 venues)</span></div>
+          <div><span class="t-res">✓</span> <span class="t-text">Crowd simulation online</span></div>
+          <div><span class="t-res">✓</span> <span class="t-text">Transport grid active</span></div>
+          <div style="margin-top:12px;"><span class="t-prompt">Fan [ES]:</span> <span class="t-text">¿Cómo llego a mi asiento B-14?</span></div>
+          <div style="margin-top:4px;"><span class="t-prompt">ARIA:</span> <span class="t-res">Enter Gate B (Norte), take escalator to Level 2, turn right. Section 14 is 40m ahead. ETA: ~4 minutes. Queue: Low 🟢</span></div>
+          <div style="margin-top:12px;"><span class="t-prompt">Staff:</span> <span class="t-text">Gate D crowd density alert?</span></div>
+          <div style="margin-top:4px;"><span class="t-prompt">ARIA:</span> <span class="t-warn">⚠ Gate D at 78% capacity. Recommend redirecting flow to Gate E (32% capacity). Deploy 3 additional stewards to Gate D concourse by T-15min.</span></div>
+          <div style="margin-top:12px;"><span class="t-prompt">Fan [FR]:</span> <span class="t-text">Je suis en fauteuil roulant</span></div>
+          <div style="margin-top:4px;"><span class="t-prompt">ARIA:</span> <span class="t-res">Accessible entrance: Gate A (rampe disponible). Lifts actifs aux niveaux 1-3. Places PMR: Secteur F rangées 1-2. Escort available — press help button at Gate A. 🦽</span></div>
+          <div style="margin-top:12px;"><span class="t-prompt">ARIA</span> <span class="t-text">Ready for next query...</span> <span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div>
+      <span class="footer-brand">⚡ StadiumIQ</span>
+      <div class="footer-copy" style="margin-top:4px;">Powered by Google Gemini 1.5 Pro · FIFA World Cup 2026</div>
+    </div>
+    <div style="display:flex;gap:var(--space-4);align-items:center;">
+      <span class="badge badge-success"><span class="pulse-dot green" style="width:6px;height:6px;display:inline-block;"></span> All Systems Operational</span>
+      <span class="footer-copy">Built with ❤ for 3.4M fans</span>
+    </div>
+  </footer>
+
+  <!-- ── API KEY MODAL ── -->
+  <div class="api-key-modal" id="apiModal" style="display:none;">
+    <div class="api-key-box">
+      <div style="text-align:center;margin-bottom:var(--space-8);">
+        <div style="width:64px;height:64px;background:var(--grad-primary);border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-4);">
+          <i data-lucide="key" style="width:28px;height:28px;color:white;"></i>
+        </div>
+        <h2 style="font-size:1.5rem;margin-bottom:var(--space-2);">Connect Gemini AI</h2>
+        <p style="color:var(--text-secondary);font-size:0.875rem;">Enter your Google Gemini API key to activate ARIA and all 7 AI modules. Your key is stored locally and never transmitted to any server.</p>
+      </div>
+      <div style="margin-bottom:var(--space-6);">
+        <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Gemini API Key</label>
+        <input type="password" id="apiKeyInput" class="input" placeholder="AIza..." style="width:100%;font-family:var(--font-mono);" />
+      </div>
+      <div style="display:flex;gap:var(--space-3);">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveApiKey()">
+          <i data-lucide="check" style="width:16px;height:16px;"></i>
+          Activate AI
+        </button>
+        <button class="btn btn-ghost" onclick="closeApiModal()">Skip</button>
+      </div>
+      <div style="margin-top:var(--space-4);text-align:center;">
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:0.8rem;color:var(--brand-primary);">
+          Get a free API key from Google AI Studio →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST CONTAINER ── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // Init icons
+    lucide.createIcons();
+
+    // API Key management
+    function showApiModal() {
+      const modal = document.getElementById('apiModal');
+      modal.style.display = 'flex';
+      const stored = localStorage.getItem('stadiumiq_gemini_key');
+      if (stored) document.getElementById('apiKeyInput').value = stored;
+    }
+
+    function closeApiModal() {
+      document.getElementById('apiModal').style.display = 'none';
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (!key) { showToast('Please enter a valid API key', 'warning'); return; }
+      localStorage.setItem('stadiumiq_gemini_key', key);
+      closeApiModal();
+      showToast('✓ Gemini AI activated — StadiumIQ is fully live!', 'success');
+    }
+
+    // Toast notifications
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const icons = { success: 'check-circle', warning: 'alert-triangle', danger: 'alert-circle', info: 'info' };
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<i data-lucide="${icons[type]}" style="width:16px;height:16px;flex-shrink:0;"></i> ${msg}`;
+      container.appendChild(toast);
+      lucide.createIcons({ nodes: [toast] });
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // Show API modal on first visit
+    window.addEventListener('load', () => {
+      const key = localStorage.getItem('stadiumiq_gemini_key');
+      if (!key) setTimeout(() => showApiModal(), 1200);
+    });
+
+    // Animate terminal with typing effect
+    const terminalLines = [
+      { delay: 2000, html: '<div style="margin-top:12px;"><span class="t-prompt">Organizer:</span> <span class="t-text">Predict crowd for post-match exit at 22:00</span></div>' },
+      { delay: 3500, html: '<div style="margin-top:4px;"><span class="t-prompt">ARIA:</span> <span class="t-alert">⚡ Post-match: ~68,000 fans exiting in 35min window. Recommend staggered exit by sections (A→F). Metro surge: +400% Line 3. Shuttle demand: 12,000 trips needed. Activate overflow protocol NOW for Gate South.</span></div>' },
+    ];
+
+    let lineIdx = 0;
+    function addTerminalLine() {
+      if (lineIdx >= terminalLines.length) return;
+      const term = document.getElementById('terminal-output');
+      term.innerHTML += terminalLines[lineIdx].html;
+      lineIdx++;
+      term.scrollTop = term.scrollHeight;
+      if (lineIdx < terminalLines.length) setTimeout(addTerminalLine, terminalLines[lineIdx]?.delay || 2000);
+    }
+    setTimeout(addTerminalLine, terminalLines[0]?.delay || 2000);
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-fadeInUp').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

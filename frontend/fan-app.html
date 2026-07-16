@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>ARIA Fan App — StadiumIQ · FIFA World Cup 2026</title>
+  <meta name="description" content="Your AI-powered matchday companion for FIFA World Cup 2026. Navigate stadiums, get real-time queues, eco scores, transport help, and ARIA multilingual assistance."/>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    body { background:var(--bg-deep); min-height:100vh; }
+
+    /* ── APP SHELL ── */
+    .app-shell { display:flex; flex-direction:column; min-height:100vh; max-width:480px; margin:0 auto; background:var(--bg-space); position:relative; }
+
+    /* ── TOP BAR ── */
+    .top-bar {
+      position:sticky; top:0; z-index:50;
+      background:rgba(6,9,18,0.9); backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--glass-border);
+      padding:12px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .top-bar-brand { font-family:var(--font-display); font-weight:800; font-size:1.1rem;
+      background:var(--grad-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .top-bar-venue { font-size:0.75rem; color:var(--text-tertiary); }
+    .top-bar-right { display:flex; align-items:center; gap:8px; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position:sticky; bottom:0; z-index:50;
+      background:rgba(6,9,18,0.95); backdrop-filter:blur(20px);
+      border-top:1px solid var(--glass-border);
+      display:flex; align-items:stretch;
+      padding:8px 4px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .nav-item {
+      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:3px; padding:6px 4px; border-radius:var(--radius-lg); cursor:pointer;
+      border:none; background:transparent; transition:var(--transition-base);
+      color:var(--text-tertiary); font-family:var(--font-body);
+    }
+    .nav-item:hover { background:var(--glass-bg); color:var(--text-secondary); }
+    .nav-item.active { color:var(--brand-primary); background:rgba(0,212,255,0.1); }
+    .nav-label { font-size:0.6rem; font-weight:600; letter-spacing:0.03em; }
+
+    /* ── PAGE CONTENT ── */
+    .page { display:none; flex:1; overflow-y:auto; }
+    .page.active { display:flex; flex-direction:column; }
+    .page-inner { padding:16px; display:flex; flex-direction:column; gap:16px; flex:1; }
+
+    /* ── ARIA CHAT ── */
+    .chat-container { display:flex; flex-direction:column; flex:1; }
+    .chat-header {
+      background:var(--grad-cyan-purple); border-bottom:1px solid var(--glass-border);
+      padding:16px 20px;
+    }
+    .aria-avatar {
+      width:48px; height:48px; border-radius:50%;
+      background:var(--grad-primary); display:flex; align-items:center; justify-content:center;
+      box-shadow:var(--glow-cyan); margin-right:12px; flex-shrink:0;
+    }
+    .chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; min-height:300px; }
+    .msg-row { display:flex; align-items:flex-end; gap:8px; }
+    .msg-row.user { flex-direction:row-reverse; }
+    .msg-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.7rem; font-weight:700; }
+    .msg-avatar.ai   { background:var(--grad-primary); color:white; }
+    .msg-avatar.user { background:var(--bg-card); color:var(--text-secondary); }
+
+    .chat-input-area {
+      padding:12px 16px; border-top:1px solid var(--glass-border);
+      background:rgba(6,9,18,0.8); backdrop-filter:blur(10px);
+    }
+    .chat-input-row { display:flex; gap:8px; align-items:flex-end; }
+    .chat-input {
+      flex:1; background:var(--bg-surface); border:1px solid var(--glass-border);
+      border-radius:var(--radius-xl); padding:10px 16px; color:var(--text-primary);
+      font-family:var(--font-body); font-size:0.875rem; resize:none; outline:none;
+      transition:var(--transition-base); min-height:40px; max-height:120px;
+    }
+    .chat-input:focus { border-color:var(--brand-primary); }
+    .send-btn {
+      width:40px; height:40px; border-radius:50%; background:var(--grad-primary);
+      display:flex; align-items:center; justify-content:center; cursor:pointer; border:none;
+      transition:var(--transition-spring); flex-shrink:0; box-shadow:var(--glow-cyan);
+    }
+    .send-btn:hover { transform:scale(1.1); }
+    .quick-actions { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    .quick-btn {
+      padding:5px 12px; background:var(--bg-card); border:1px solid var(--glass-border);
+      border-radius:var(--radius-full); font-size:0.72rem; font-weight:500; color:var(--text-secondary);
+      cursor:pointer; border:none; transition:var(--transition-fast); white-space:nowrap;
+      font-family:var(--font-body);
+    }
+    .quick-btn:hover { background:rgba(0,212,255,0.1); color:var(--brand-primary); }
+
+    /* ── MATCHDAY PAGE ── */
+    .match-hero {
+      background:var(--grad-card); border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:20px; text-align:center; position:relative; overflow:hidden;
+    }
+    .match-hero::before {
+      content:'⚽'; position:absolute; font-size:100px; opacity:0.05; top:-10px; right:-10px; line-height:1;
+    }
+    .match-score { font-family:var(--font-display); font-size:2.5rem; font-weight:900; color:var(--text-primary); }
+    .match-teams { display:flex; align-items:center; justify-content:space-around; gap:8px; }
+    .team-flag { font-size:2.5rem; }
+    .team-name { font-size:0.75rem; color:var(--text-secondary); font-weight:600; margin-top:4px; }
+    .match-timer { font-family:var(--font-mono); color:var(--brand-primary); font-size:0.875rem; font-weight:600; }
+
+    .service-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .service-card {
+      background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:16px; display:flex; flex-direction:column; gap:8px; cursor:pointer;
+      transition:var(--transition-base);
+    }
+    .service-card:hover { border-color:rgba(0,212,255,0.3); transform:translateY(-2px); }
+    .service-icon { font-size:1.8rem; }
+    .service-name { font-size:0.8rem; font-weight:700; color:var(--text-primary); }
+    .service-val  { font-family:var(--font-display); font-size:1.4rem; font-weight:800; }
+    .service-sub  { font-size:0.7rem; color:var(--text-tertiary); }
+
+    /* ── QUEUE BARS ── */
+    .queue-item { background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--radius-xl); padding:14px 16px; }
+    .queue-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .queue-name { font-size:0.875rem; font-weight:600; color:var(--text-primary); }
+    .queue-wait { font-family:var(--font-display); font-size:1.1rem; font-weight:700; }
+
+    /* ── ECO SCORE ── */
+    .eco-hero {
+      background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.1));
+      border:1px solid rgba(16,185,129,0.2); border-radius:var(--radius-2xl); padding:24px; text-align:center;
+    }
+    .eco-circle {
+      width:120px; height:120px; border-radius:50%; margin:0 auto 16px;
+      background:conic-gradient(var(--brand-emerald) var(--pct,0%), var(--bg-surface) 0%);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 0 30px rgba(16,185,129,0.3);
+      position:relative;
+    }
+    .eco-circle-inner {
+      width:90px; height:90px; border-radius:50%; background:var(--bg-deep);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+    }
+    .eco-score-num { font-family:var(--font-display); font-size:1.8rem; font-weight:900; color:var(--brand-emerald); }
+    .eco-score-label { font-size:0.65rem; color:var(--text-tertiary); }
+
+    .transport-card {
+      background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:16px; display:flex; align-items:center; gap:12px;
+    }
+    .transport-icon { width:44px; height:44px; border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .transport-info { flex:1; }
+    .transport-name { font-size:0.875rem; font-weight:700; color:var(--text-primary); }
+    .transport-detail { font-size:0.75rem; color:var(--text-secondary); margin-top:2px; }
+    .transport-wait { font-family:var(--font-display); font-size:1.1rem; font-weight:700; }
+
+    /* ── ACCESS PAGE ── */
+    .access-card {
+      background:linear-gradient(135deg,rgba(16,185,129,0.1),transparent);
+      border:1px solid rgba(16,185,129,0.25); border-radius:var(--radius-xl); padding:16px;
+      display:flex; gap:12px; align-items:flex-start; cursor:pointer; transition:var(--transition-base);
+    }
+    .access-card:hover { border-color:var(--brand-emerald); }
+    .access-icon { font-size:1.5rem; flex-shrink:0; }
+
+    /* ── SETTINGS MODAL ── */
+    .settings-overlay {
+      position:fixed; inset:0; background:rgba(6,9,18,0.9); backdrop-filter:blur(10px);
+      z-index:200; display:flex; align-items:flex-end; justify-content:center;
+      opacity:0; pointer-events:none; transition:var(--transition-base);
+    }
+    .settings-overlay.open { opacity:1; pointer-events:all; }
+    .settings-sheet {
+      background:var(--bg-elevated); border:1px solid var(--glass-border); border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
+      padding:24px; width:100%; max-width:480px;
+      transform:translateY(100%); transition:var(--transition-spring);
+    }
+    .settings-overlay.open .settings-sheet { transform:translateY(0); }
+    .sheet-handle { width:36px; height:4px; background:var(--glass-border); border-radius:var(--radius-full); margin:0 auto 20px; }
+
+    /* ── AI STATUS PILL ── */
+    .ai-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:var(--radius-full); font-size:0.7rem; font-weight:600; }
+    .ai-pill.live { background:rgba(16,185,129,0.15); color:var(--brand-emerald); }
+    .ai-pill.demo { background:rgba(245,158,11,0.15); color:var(--status-warning); }
+
+    /* ── CROWD MINI MAP ── */
+    .crowd-map { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto; gap:4px; }
+    .zone-cell {
+      border-radius:var(--radius-md); padding:12px 8px; text-align:center;
+      font-size:0.72rem; font-weight:700; color:white; cursor:pointer; transition:var(--transition-base);
+    }
+    .zone-cell:hover { transform:scale(1.05); }
+    .zone-field { grid-column:span 2; }
+    .zone-low      { background:rgba(16,185,129,0.7); }
+    .zone-medium   { background:rgba(245,158,11,0.7); }
+    .zone-high     { background:rgba(249,115,22,0.7); }
+    .zone-critical { background:rgba(239,68,68,0.8); animation:pulse-badge 2s infinite; }
+  </style>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+
+  <!-- ── TOP BAR ── -->
+  <div class="top-bar">
+    <div>
+      <div class="top-bar-brand">⚡ StadiumIQ</div>
+      <div class="top-bar-venue" id="venueLabel">MetLife Stadium · NJ</div>
+    </div>
+    <div class="top-bar-right">
+      <span class="ai-pill demo" id="aiPill">● Demo Mode</span>
+      <button class="btn btn-ghost btn-sm" onclick="openSettings()" id="settingsBtn" style="padding:6px;">
+        <i data-lucide="settings" style="width:16px;height:16px;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PAGES ── -->
+
+  <!-- PAGE: ARIA CHAT -->
+  <div class="page active" id="page-aria" style="flex-direction:column;">
+    <div class="chat-container" style="display:flex;flex-direction:column;flex:1;">
+      <div class="chat-header">
+        <div style="display:flex;align-items:center;">
+          <div class="aria-avatar">
+            <i data-lucide="bot" style="width:24px;height:24px;color:white;"></i>
+          </div>
+          <div>
+            <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;">ARIA</div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">AI Assistant · 32 Languages · Gemini 1.5 Pro</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-messages scroll-area" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="msg-row animate-fadeInUp">
+          <div class="msg-avatar ai"><i data-lucide="bot" style="width:12px;height:12px;"></i></div>
+          <div class="chat-bubble ai">
+            👋 <strong>Welcome to FIFA World Cup 2026!</strong> I'm ARIA, your AI matchday assistant.<br><br>
+            I can help with navigation, queues, transport, accessibility, eco tips, and more — in <strong>32 languages</strong>.<br><br>
+            Ask me anything! 🏟️⚽
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="sendQuick('Where is my seat?')">🎯 My Seat</button>
+          <button class="quick-btn" onclick="sendQuick('Food queues now?')">🍔 Queues</button>
+          <button class="quick-btn" onclick="sendQuick('Wheelchair access?')">♿ Access</button>
+          <button class="quick-btn" onclick="sendQuick('Best transport home?')">🚌 Transport</button>
+          <button class="quick-btn" onclick="sendQuick('My eco score?')">🌱 EcoScore</button>
+          <button class="quick-btn" onclick="sendQuick('Emergency help')">🚨 Emergency</button>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Ask ARIA anything… (any language)" rows="1"
+            onkeydown="handleChatKey(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <i data-lucide="send" style="width:16px;height:16px;color:white;"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: MATCH DAY -->
+  <div class="page" id="page-match">
+    <div class="page-inner">
+      <!-- Live match widget -->
+      <div class="match-hero">
+        <div style="font-size:0.7rem;color:var(--text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">🔴 LIVE · 67'</div>
+        <div class="match-teams">
+          <div><div class="team-flag">🇺🇸</div><div class="team-name">USA</div></div>
+          <div>
+            <div class="match-score" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">2 – 1</div>
+            <div class="match-timer">67:32</div>
+          </div>
+          <div><div class="team-flag">🇷🇸</div><div class="team-name">SRB</div></div>
+        </div>
+        <div style="margin-top:12px;font-size:0.75rem;color:var(--text-tertiary);">MetLife Stadium · New York/NJ</div>
+      </div>
+
+      <!-- Service status grid -->
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Stadium Services</div>
+      <div class="service-grid stagger">
+        <div class="service-card animate-fadeInUp">
+          <div class="service-icon">🍔</div>
+          <div class="service-name">Concessions</div>
+          <div class="service-val" style="color:var(--brand-emerald);">4 min</div>
+          <div class="service-sub">Level 2 • Low queue ✅</div>
+        </div>
+        <div class="service-card animate-fadeInUp">
+          <div class="service-icon">🚻</div>
+          <div class="service-name">Restrooms</div>
+          <div class="service-val" style="color:var(--status-warning);">8 min</div>
+          <div class="service-sub">Section 14 • Medium</div>
+        </div>
+        <div class="service-card animate-fadeInUp">
+          <div class="service-icon">🏥</div>
+          <div class="service-name">Medical</div>
+          <div class="service-val" style="color:var(--brand-emerald);">2 min</div>
+          <div class="service-sub">Gate B • Staffed ✅</div>
+        </div>
+        <div class="service-card animate-fadeInUp">
+          <div class="service-icon">🛍️</div>
+          <div class="service-name">Merch Store</div>
+          <div class="service-val" style="color:var(--brand-emerald);">2 min</div>
+          <div class="service-sub">Main Concourse</div>
+        </div>
+      </div>
+
+      <!-- Crowd mini map -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i data-lucide="activity" style="width:14px;height:14px;color:var(--brand-primary);"></i> Live Crowd Map</span>
+          <span class="badge badge-live">LIVE</span>
+        </div>
+        <div class="crowd-map" id="crowdMap">
+          <div class="zone-cell zone-high">N<br>78%</div>
+          <div class="zone-cell zone-medium">E<br>62%</div>
+          <div class="zone-cell zone-field zone-critical">FIELD LEVEL<br>91% ⚠</div>
+          <div class="zone-cell zone-low">W<br>44%</div>
+          <div class="zone-cell zone-medium">S<br>55%</div>
+          <div class="zone-cell zone-low">UPPER<br>38%</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <span style="font-size:0.65rem;display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:rgba(16,185,129,0.7);border-radius:2px;display:inline-block;"></span>Low</span>
+          <span style="font-size:0.65rem;display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:rgba(245,158,11,0.7);border-radius:2px;display:inline-block;"></span>Medium</span>
+          <span style="font-size:0.65rem;display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:rgba(249,115,22,0.7);border-radius:2px;display:inline-block;"></span>High</span>
+          <span style="font-size:0.65rem;display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:rgba(239,68,68,0.8);border-radius:2px;display:inline-block;"></span>Critical</span>
+        </div>
+      </div>
+
+      <!-- Queue predictions -->
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Queue Predictions</div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="queueList">
+        <div class="queue-item"><div class="queue-row"><span class="queue-name">🍔 Concessions — Level 2</span><span class="queue-wait" style="color:var(--brand-emerald);">4 min</span></div><div class="progress-bar"><div class="progress-fill green" style="width:30%"></div></div></div>
+        <div class="queue-item"><div class="queue-row"><span class="queue-name">🍔 Concessions — Level 1</span><span class="queue-wait" style="color:var(--status-warning);">9 min</span></div><div class="progress-bar"><div class="progress-fill gold" style="width:65%"></div></div></div>
+        <div class="queue-item"><div class="queue-row"><span class="queue-name">🚻 Restrooms — Section 12</span><span class="queue-wait" style="color:var(--brand-emerald);">3 min</span></div><div class="progress-bar"><div class="progress-fill green" style="width:25%"></div></div></div>
+        <div class="queue-item"><div class="queue-row"><span class="queue-name">🚻 Restrooms — Section 15</span><span class="queue-wait" style="color:var(--status-danger);">14 min</span></div><div class="progress-bar"><div class="progress-fill danger" style="width:85%"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: ECO SCORE -->
+  <div class="page" id="page-eco">
+    <div class="page-inner">
+      <div class="eco-hero">
+        <div style="font-size:0.7rem;font-weight:600;color:var(--brand-emerald);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">🌱 Your Matchday EcoScore</div>
+        <div class="eco-circle" id="ecoCircle" style="--pct:0%;">
+          <div class="eco-circle-inner">
+            <div class="eco-score-num" id="ecoScoreNum">72</div>
+            <div class="eco-score-label">EcoScore</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:12px;">
+          <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--text-primary);" id="co2Val">7.1</div><div style="font-size:0.65rem;color:var(--text-tertiary);">kg CO₂</div></div>
+          <div style="width:1px;background:var(--glass-border);"></div>
+          <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--brand-gold);" id="ecoPoints">36</div><div style="font-size:0.65rem;color:var(--text-tertiary);">EcoPoints ⭐</div></div>
+          <div style="width:1px;background:var(--glass-border);"></div>
+          <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--brand-emerald);">4.2</div><div style="font-size:0.65rem;color:var(--text-tertiary);">kg saved vs car</div></div>
+        </div>
+      </div>
+
+      <!-- Travel mode selector -->
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i data-lucide="car" style="width:14px;height:14px;color:var(--brand-primary);"></i> Update Travel Mode</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="setTravel('metro','🚇 Metro')">🚇 Metro</button>
+          <button class="btn btn-outline btn-sm" onclick="setTravel('bus','🚌 Bus')">🚌 Bus</button>
+          <button class="btn btn-outline btn-sm" onclick="setTravel('car_petrol','🚗 Car')">🚗 Car</button>
+          <button class="btn btn-outline btn-sm" onclick="setTravel('walk','🚶 Walk')">🚶 Walk</button>
+          <button class="btn btn-outline btn-sm" onclick="setTravel('bike','🚴 Bike')">🚴 Bike</button>
+          <button class="btn btn-outline btn-sm" onclick="setTravel('shuttle','🚌 Shuttle')">🚐 Shuttle</button>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="font-size:0.75rem;color:var(--text-tertiary);display:block;margin-bottom:4px;">Distance to stadium (km)</label>
+          <input type="range" id="distanceSlider" min="1" max="100" value="25" oninput="updateDistance(this.value)"/>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;"><span id="distanceVal">25</span> km</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="calculateEco()">
+          <i data-lucide="calculator" style="width:14px;height:14px;"></i> Recalculate EcoScore
+        </button>
+      </div>
+
+      <!-- Eco tips -->
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">AI Eco Recommendations</div>
+      <div id="ecoTips" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="access-card"><div class="access-icon">🚇</div><div><div style="font-size:0.875rem;font-weight:600;color:var(--text-primary);">Take metro home</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Saves 4.2kg CO₂ vs driving. Platform 3 is less crowded right now.</div></div></div>
+        <div class="access-card"><div class="access-icon">🥗</div><div><div style="font-size:0.875rem;font-weight:600;color:var(--text-primary);">Veggie option available</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">The veggie burger at Section 12 saves 2.7kg CO₂ vs beef burger.</div></div></div>
+        <div class="access-card"><div class="access-icon">♻️</div><div><div style="font-size:0.875rem;font-weight:600;color:var(--text-primary);">Recycling stations nearby</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Blue bins (plastic), green (food), grey (mixed) on every concourse.</div></div></div>
+      </div>
+
+      <!-- Venue eco stats -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🏟️ Stadium Eco Today</span></div>
+        <div class="grid-2">
+          <div class="stat-card green"><div class="stat-label">Solar Generated</div><div class="stat-value">4.2<span style="font-size:1rem;">MWh</span></div></div>
+          <div class="stat-card green"><div class="stat-label">Waste Diverted</div><div class="stat-value">78<span style="font-size:1rem;">%</span></div></div>
+          <div class="stat-card green"><div class="stat-label">CO₂ Avoided</div><div class="stat-value">2.1<span style="font-size:1rem;">t</span></div></div>
+          <div class="stat-card green"><div class="stat-label">Water Saved</div><div class="stat-value">12<span style="font-size:1rem;">kL</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: TRANSPORT -->
+  <div class="page" id="page-transport">
+    <div class="page-inner">
+      <div class="alert alert-info" style="font-size:0.8rem;">
+        <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;"></i>
+        Match ends in ~23 min. Plan your exit now for best experience.
+      </div>
+
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Live Transport Options</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;" id="transportList">
+        <div class="transport-card">
+          <div class="transport-icon" style="background:rgba(59,130,246,0.15);">🚇</div>
+          <div class="transport-info">
+            <div class="transport-name">NJ Transit Metro</div>
+            <div class="transport-detail">Meadowlands Station · Line 3 · 68% load</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill cyan" style="width:68%"></div></div>
+          </div>
+          <div style="text-align:right;"><div class="transport-wait" style="color:var(--brand-emerald);">12 min</div><div style="font-size:0.65rem;color:var(--text-tertiary);">wait</div></div>
+        </div>
+        <div class="transport-card">
+          <div class="transport-icon" style="background:rgba(124,58,237,0.15);">🚌</div>
+          <div class="transport-info">
+            <div class="transport-name">Shuttle — Zone C</div>
+            <div class="transport-detail">Direct to Penn Station · 42% load ✅</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill green" style="width:42%"></div></div>
+          </div>
+          <div style="text-align:right;"><div class="transport-wait" style="color:var(--brand-emerald);">6 min</div><div style="font-size:0.65rem;color:var(--text-tertiary);">wait</div></div>
+        </div>
+        <div class="transport-card">
+          <div class="transport-icon" style="background:rgba(239,68,68,0.15);">🚗</div>
+          <div class="transport-info">
+            <div class="transport-name">Parking Zone A</div>
+            <div class="transport-detail">95% full — NOT recommended ❌</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill danger" style="width:95%"></div></div>
+          </div>
+          <div style="text-align:right;"><div class="transport-wait" style="color:var(--status-danger);">95%</div><div style="font-size:0.65rem;color:var(--text-tertiary);">full</div></div>
+        </div>
+        <div class="transport-card">
+          <div class="transport-icon" style="background:rgba(251,191,36,0.15);">🚗</div>
+          <div class="transport-info">
+            <div class="transport-name">Parking Zone D</div>
+            <div class="transport-detail">22% full — RECOMMENDED ✅ · 8 min walk</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill green" style="width:22%"></div></div>
+          </div>
+          <div style="text-align:right;"><div class="transport-wait" style="color:var(--brand-emerald);">22%</div><div style="font-size:0.65rem;color:var(--text-tertiary);">full</div></div>
+        </div>
+        <div class="transport-card">
+          <div class="transport-icon" style="background:rgba(245,158,11,0.15);">🚕</div>
+          <div class="transport-info">
+            <div class="transport-name">Ride Share / Taxi</div>
+            <div class="transport-detail">High surge pricing · 2.1× · 28min wait</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill gold" style="width:78%"></div></div>
+          </div>
+          <div style="text-align:right;"><div class="transport-wait" style="color:var(--status-warning);">2.1×</div><div style="font-size:0.65rem;color:var(--text-tertiary);">surge</div></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;" onclick="getTransportAdvice()">
+        <i data-lucide="zap" style="width:14px;height:14px;"></i> Get AI Route Recommendation
+      </button>
+      <div id="transportAiResponse" style="display:none;" class="card"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: ACCESS -->
+  <div class="page" id="page-access">
+    <div class="page-inner">
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.1),transparent);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-xl);padding:20px;text-align:center;">
+        <div style="font-size:2rem;margin-bottom:8px;">♿</div>
+        <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:4px;">AccessPath Navigator</div>
+        <div style="font-size:0.8rem;color:var(--text-secondary);">Inclusive routes for every fan — real-time obstacle awareness</div>
+      </div>
+
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Accessible Services</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="access-card"><div class="access-icon">🚪</div><div><div style="font-size:0.875rem;font-weight:700;color:var(--brand-emerald);">Accessible Gate A</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Main entrance · Level ramp · Escort available</div></div></div>
+        <div class="access-card"><div class="access-icon">🛗</div><div><div style="font-size:0.875rem;font-weight:700;color:var(--brand-emerald);">Lifts — All Levels</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Lifts A1, A2, B1 operational · B3 under maintenance</div></div></div>
+        <div class="access-card"><div class="access-icon">🪑</div><div><div style="font-size:0.875rem;font-weight:700;color:var(--brand-emerald);">Wheelchair Seating</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Section F, Rows 1-2 · Excellent sightlines · Companion seats</div></div></div>
+        <div class="access-card"><div class="access-icon">🚻</div><div><div style="font-size:0.875rem;font-weight:700;color:var(--brand-emerald);">Accessible Restrooms</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Every level · Near Gates A, C, E · All verified operational</div></div></div>
+        <div class="access-card"><div class="access-icon">🤫</div><div><div style="font-size:0.875rem;font-weight:700;color:var(--brand-emerald);">Quiet Zone</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Section U, Level 3 · Sensory-friendly · Low noise · Dimmed lighting</div></div></div>
+        <div class="access-card"><div class="access-icon">🤟</div><div><div style="font-size:0.875rem;font-weight:700;color:var(--brand-emerald);">ASL/BSL Interpreter</div><div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Request at Gate A · Available in 8 sign languages · 15min response</div></div></div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;" onclick="sendQuick('I need accessible route to my seat in Section F')">
+        <i data-lucide="navigation" style="width:14px;height:14px;"></i> Get Accessible Route via ARIA
+      </button>
+
+      <div class="alert alert-success">
+        <i data-lucide="phone" style="width:16px;height:16px;flex-shrink:0;"></i>
+        <span><strong>Need immediate assistance?</strong> Press the BLUE help button at any gate or call the Accessibility Hotline shown on your ticket.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchPage('aria',this)">
+      <i data-lucide="bot" style="width:20px;height:20px;"></i>
+      <span class="nav-label">ARIA</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('match',this)">
+      <i data-lucide="activity" style="width:20px;height:20px;"></i>
+      <span class="nav-label">Matchday</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('eco',this)">
+      <i data-lucide="leaf" style="width:20px;height:20px;"></i>
+      <span class="nav-label">EcoScore</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('transport',this)">
+      <i data-lucide="navigation" style="width:20px;height:20px;"></i>
+      <span class="nav-label">Transport</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('access',this)">
+      <i data-lucide="accessibility" style="width:20px;height:20px;"></i>
+      <span class="nav-label">Access</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ── SETTINGS SHEET ── -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-sheet">
+    <div class="sheet-handle"></div>
+    <h3 style="margin-bottom:20px;font-size:1.1rem;">⚙️ Settings</h3>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Gemini API Key</label>
+        <input type="password" id="apiKeyInput" class="input" placeholder="AIza..." style="width:100%;font-family:var(--font-mono);font-size:0.8rem;"/>
+        <div style="font-size:0.72rem;color:var(--text-tertiary);margin-top:4px;">Stored locally only. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--brand-primary);">Get free key →</a></div>
+      </div>
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Venue</label>
+        <select class="input" id="venueSelect" style="width:100%;" onchange="updateVenue(this.value)">
+          <option value="met">MetLife Stadium — New York/NJ</option>
+          <option value="dal">AT&T Stadium — Dallas, TX</option>
+          <option value="la">SoFi Stadium — Los Angeles, CA</option>
+          <option value="atz">Estadio Azteca — Mexico City</option>
+          <option value="bc">BC Place — Vancouver, Canada</option>
+          <option value="sf">Levi's Stadium — Santa Clara, CA</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Role</label>
+        <select class="input" id="roleSelect" style="width:100%;">
+          <option value="fan">Fan</option>
+          <option value="volunteer">Volunteer</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="saveSettings()">
+        <i data-lucide="check" style="width:14px;height:14px;"></i> Save Settings
+      </button>
+      <button class="btn btn-ghost" style="width:100%;" onclick="closeSettings()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  lucide.createIcons();
+
+  // ── State ────────────────────────────────────────────────────────
+  let apiKey     = localStorage.getItem('stadiumiq_gemini_key') || '';
+  let venueId    = localStorage.getItem('stadiumiq_venue') || 'met';
+  let role       = localStorage.getItem('stadiumiq_role') || 'fan';
+  let chatHistory= [];
+  let travelMode = 'metro';
+  let distance   = 25;
+  let ecoScore   = 72;
+
+  const VENUE_NAMES = {met:'MetLife Stadium · NJ',dal:'AT&T Stadium · TX',la:'SoFi Stadium · CA',atz:'Estadio Azteca · CDMX',bc:'BC Place · Vancouver',sf:"Levi's Stadium · CA"};
+  const BACKEND_URL = window.location.origin;
+
+  // ── Init ─────────────────────────────────────────────────────────
+  function init() {
+    document.getElementById('venueLabel').textContent = VENUE_NAMES[venueId] || venueId;
+    updateAIPill();
+    animateEcoCircle(72);
+    if (!apiKey) setTimeout(() => openSettings(), 800);
+  }
+
+  function updateAIPill() {
+    const pill = document.getElementById('aiPill');
+    if (apiKey) {
+      pill.textContent = '● AI Live'; pill.className = 'ai-pill live';
+    } else {
+      pill.textContent = '● Demo Mode'; pill.className = 'ai-pill demo';
+    }
+  }
+
+  // ── Navigation ───────────────────────────────────────────────────
+  function switchPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Chat ─────────────────────────────────────────────────────────
+  function handleChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function sendQuick(text) {
+    switchPage('aria', document.querySelector('.nav-item'));
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    input.style.height = 'auto';
+
+    appendMessage('user', text);
+    chatHistory.push({role:'user', content:text});
+    showTyping();
+
+    try {
+      let responseText;
+      if (apiKey) {
+        // Try backend API first
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/chat`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({message:text, session_id:getSession(), venue_id:venueId, role, context:{}})
+          });
+          if (res.ok) {
+            const data = await res.json();
+            responseText = data.response;
+          }
+        } catch(e) { /* fallback to direct Gemini */ }
+
+        // Direct Gemini API fallback
+        if (!responseText) {
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({contents:[{role:'user',parts:[{text:`You are ARIA, FIFA World Cup 2026 AI assistant at ${VENUE_NAMES[venueId]}. User: ${text}`}]}],generationConfig:{temperature:0.75,maxOutputTokens:400}})
+          });
+          const d = await r.json();
+          responseText = d?.candidates?.[0]?.content?.parts?.[0]?.text || 'Response unavailable';
+        }
+      } else {
+        responseText = getSimulatedResponse(text);
+      }
+      removeTyping();
+      appendMessage('ai', responseText);
+      chatHistory.push({role:'assistant', content:responseText});
+    } catch(err) {
+      removeTyping();
+      appendMessage('ai', '⚠️ Connection error. ' + (apiKey ? 'Check your API key.' : 'Add Gemini API key in Settings for live responses.'));
+    }
+  }
+
+  function appendMessage(role, text) {
+    const msgs   = document.getElementById('chatMessages');
+    const isUser = role === 'user';
+    const row    = document.createElement('div');
+    row.className= `msg-row ${isUser?'user':''} animate-fadeInUp`;
+    row.innerHTML= `
+      <div class="msg-avatar ${role}">${isUser?'👤':'<i data-lucide="bot" style="width:12px;height:12px;"></i>'}</div>
+      <div class="chat-bubble ${role}">${text.replace(/\n/g,'<br>')}</div>`;
+    msgs.appendChild(row);
+    lucide.createIcons({nodes:[row]});
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  let typingEl = null;
+  function showTyping() {
+    const msgs = document.getElementById('chatMessages');
+    typingEl = document.createElement('div');
+    typingEl.className = 'msg-row';
+    typingEl.innerHTML = `<div class="msg-avatar ai"><i data-lucide="bot" style="width:12px;height:12px;"></i></div>
+      <div class="chat-bubble typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+    msgs.appendChild(typingEl);
+    lucide.createIcons({nodes:[typingEl]});
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  function removeTyping() { if(typingEl){ typingEl.remove(); typingEl=null; } }
+
+  function getSimulatedResponse(q) {
+    q = q.toLowerCase();
+    if (q.includes('seat') || q.includes('where'))    return '🎯 Check your ticket for Gate + Section + Row. Follow colored floor pathways. Staff stationed every 50m!';
+    if (q.includes('food') || q.includes('eat') || q.includes('queue')) return '🍔 Best queue: Level 2 (4 min ✅). Level 1 (9 min). Eco pick: veggie burger saves 2.1kg CO₂!';
+    if (q.includes('wheelchair') || q.includes('access')) return '♿ Accessible entry: Gate A (ramp + lift). All levels. Accessible seats: Section F, Rows 1-2. Need escort? Press blue button at Gate A.';
+    if (q.includes('transport') || q.includes('bus') || q.includes('metro')) return '🚌 Metro Line 3: 12min wait ✅ | Shuttle Zone C: 6min ✅ | Parking Zone D: 22% full (recommended)';
+    if (q.includes('eco') || q.includes('carbon') || q.includes('green')) return '🌱 Your EcoScore: 72/100 ⭐. Metro travel saved 4.2kg CO₂. 36 EcoPoints earned today!';
+    if (q.includes('emergency') || q.includes('medical') || q.includes('help')) return '🚨 Medical: Gate B entrance (2 min). Call 911. Press RED button on any column. AED every 100m on concourse.';
+    return `🤖 Hi! I'm ARIA — your FIFA WC 2026 AI.\n\nSet your Gemini API key in ⚙️ Settings for full AI in 32 languages!\n\nI can help with: 🎯 Navigation · 🍔 Queues · ♿ Accessibility · 🚌 Transport · 🌱 EcoScore · 🚨 Safety`;
+  }
+
+  // ── Eco ──────────────────────────────────────────────────────────
+  function setTravel(mode, label) { travelMode = mode; showToast(`Transport set: ${label}`,'info'); }
+  function updateDistance(v) { distance=parseInt(v); document.getElementById('distanceVal').textContent=v; }
+
+  async function calculateEco() {
+    const factors = {metro:0.041,bus:0.089,car_petrol:0.171,walk:0.0,bike:0.0,shuttle:0.072};
+    const co2 = (factors[travelMode]||0.1)*distance;
+    ecoScore  = Math.max(0, Math.round(100-(co2/20)*100));
+    const pts = Math.round(ecoScore/2);
+    document.getElementById('co2Val').textContent = co2.toFixed(1);
+    document.getElementById('ecoScoreNum').textContent = ecoScore;
+    document.getElementById('ecoPoints').textContent = pts;
+    animateEcoCircle(ecoScore);
+    showToast(`EcoScore updated: ${ecoScore}/100 · ${pts} pts earned`,'success');
+  }
+
+  function animateEcoCircle(score) {
+    const circle = document.getElementById('ecoCircle');
+    let current  = 0;
+    const target = score;
+    const step   = () => {
+      current = Math.min(current+2, target);
+      const color = current>70 ? '#10b981' : current>40 ? '#f59e0b' : '#ef4444';
+      circle.style.setProperty('--pct', `${current*3.6}deg`);
+      circle.style.background = `conic-gradient(${color} ${current*3.6}deg, var(--bg-surface) 0%)`;
+      document.getElementById('ecoScoreNum').style.color = color;
+      if (current<target) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ── Transport AI ─────────────────────────────────────────────────
+  async function getTransportAdvice() {
+    const resp = document.getElementById('transportAiResponse');
+    resp.style.display='block';
+    resp.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><div class="spinner"></div> Getting AI recommendation…</div>';
+    lucide.createIcons({nodes:[resp]});
+    const text = await getAIText('Best transport option from MetLife Stadium right now after the match?');
+    resp.innerHTML = `<div style="font-size:0.875rem;line-height:1.6;color:var(--text-secondary);">${text.replace(/\n/g,'<br>')}</div>`;
+  }
+
+  async function getAIText(prompt) {
+    if (apiKey) {
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:300}})});
+        const d = await r.json();
+        return d?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+      } catch(e){ return getSimulatedResponse(prompt); }
+    }
+    return getSimulatedResponse(prompt);
+  }
+
+  // ── Settings ─────────────────────────────────────────────────────
+  function openSettings() {
+    document.getElementById('apiKeyInput').value = apiKey;
+    document.getElementById('venueSelect').value = venueId;
+    document.getElementById('roleSelect').value  = role;
+    document.getElementById('settingsOverlay').classList.add('open');
+    lucide.createIcons();
+  }
+
+  function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+
+  function saveSettings() {
+    apiKey  = document.getElementById('apiKeyInput').value.trim();
+    venueId = document.getElementById('venueSelect').value;
+    role    = document.getElementById('roleSelect').value;
+    if (apiKey) localStorage.setItem('stadiumiq_gemini_key', apiKey);
+    localStorage.setItem('stadiumiq_venue', venueId);
+    localStorage.setItem('stadiumiq_role',  role);
+    document.getElementById('venueLabel').textContent = VENUE_NAMES[venueId];
+    updateAIPill();
+    closeSettings();
+    showToast('Settings saved' + (apiKey ? ' — Gemini AI active!' : ''), apiKey ? 'success' : 'info');
+  }
+
+  function updateVenue(v) { venueId = v; }
+
+  // ── Toast ─────────────────────────────────────────────────────────
+  function showToast(msg, type='info') {
+    const icons = {success:'check-circle',warning:'alert-triangle',danger:'alert-circle',info:'info'};
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<i data-lucide="${icons[type]}" style="width:14px;height:14px;flex-shrink:0;"></i> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    lucide.createIcons({nodes:[t]});
+    setTimeout(()=>t.remove(),3500);
+  }
+
+  // ── Session ───────────────────────────────────────────────────────
+  function getSession() {
+    let s = sessionStorage.getItem('aria_session');
+    if (!s) { s = 'fan_' + Date.now(); sessionStorage.setItem('aria_session',s); }
+    return s;
+  }
+
+  // ── Live crowd map update ─────────────────────────────────────────
+  function updateCrowdMap() {
+    const zones = document.querySelectorAll('.zone-cell');
+    zones.forEach(z => {
+      const pct = Math.max(20,Math.min(99, parseInt(z.textContent.match(/\d+/)?.[0]||50) + (Math.random()>0.5?2:-2)));
+      const cls = pct<50?'zone-low':pct<75?'zone-medium':pct<90?'zone-high':'zone-critical';
+      z.className = z.className.replace(/zone-\w+$/,'') + cls;
+      const label = z.textContent.split('\n')[0] || z.textContent.split('<br>')[0];
+    });
+  }
+  setInterval(updateCrowdMap, 8000);
+
+  // ── Init ─────────────────────────────────────────────────────────
+  window.addEventListener('load', init);
+</script>
+</body>
+</html>
