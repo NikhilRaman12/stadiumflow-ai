@@ -461,6 +461,8 @@
 lucide.createIcons();
 
 let apiKey   = localStorage.getItem('stadiumiq_gemini_key') || '';
+let backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
+let BACKEND_URL = backendUrl || window.location.origin;
 let venueId  = 'met';
 let opsChatHistory = [];
 
@@ -482,7 +484,7 @@ function updateAIStatus() {
 
 async function fetchHealthStatus() {
   try {
-    const r = await fetch('/api/health');
+    const r = await fetch(`${BACKEND_URL}/api/health`);
     if (r.ok) {
       const d = await r.json();
       document.getElementById('kgNodes').textContent = d.services?.graphrag?.split(' ')[0] || '250+';
