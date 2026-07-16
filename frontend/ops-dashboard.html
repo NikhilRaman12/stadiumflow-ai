@@ -527,7 +527,6 @@ function buildHeatmap() {
 }
 
 function zoneStyle(d) {
-  const color = d<50?'rgba(16,185,129,':'d<75?'rgba(245,158,11,':'d<90?'rgba(249,115,22,':'rgba(239,68,68,';
   const c = d<50?'rgba(16,185,129,0.75)':d<75?'rgba(245,158,11,0.75)':d<90?'rgba(249,115,22,0.8)':'rgba(239,68,68,0.85)';
   return `background:${c};`;
 }
