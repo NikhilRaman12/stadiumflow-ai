@@ -1,5 +1,5 @@
 """
-OpsCommand Supervisor Agent — LangGraph StateGraph
+OpsCommand Supervisor Agent - LangGraph StateGraph
 ===================================================
 The orchestrating supervisor that routes complex queries
 to specialist agents via A2A and synthesizes final responses.

@@ -1,5 +1,5 @@
 """
-A2A Agent Cards — StadiumIQ
+A2A Agent Cards - StadiumIQ
 ============================
 Defines Agent Cards per Google's Agent-to-Agent (A2A) protocol specification.
 Each card describes an agent's capabilities, endpoint, and I/O schemas.
@@ -39,7 +39,7 @@ def get_all_agent_cards() -> list[AgentCard]:
     return [
         AgentCard(
             agent_id    = "fan-assistant-agent",
-            name        = "ARIA — Fan Assistant Agent",
+            name        = "ARIA - Fan Assistant Agent",
             description = "Multilingual AI assistant for fans: navigation, services, accessibility, itinerary.",
             endpoint    = f"{BASE_URL}/a2a/fan",
             tags        = ["fan","navigation","multilingual","accessibility"],
@@ -55,7 +55,7 @@ def get_all_agent_cards() -> list[AgentCard]:
         ),
         AgentCard(
             agent_id    = "crowd-intelligence-agent",
-            name        = "CrowdSense — Intelligence Agent",
+            name        = "CrowdSense - Intelligence Agent",
             description = "Real-time crowd density analysis, bottleneck detection, flow optimization.",
             endpoint    = f"{BASE_URL}/a2a/crowd",
             tags        = ["crowd","density","bottleneck","operations"],
@@ -70,7 +70,7 @@ def get_all_agent_cards() -> list[AgentCard]:
         ),
         AgentCard(
             agent_id    = "incident-response-agent",
-            name        = "IncidentGuard — Response Agent",
+            name        = "IncidentGuard - Response Agent",
             description = "Incident classification, severity scoring, response protocol generation.",
             endpoint    = f"{BASE_URL}/a2a/incident",
             tags        = ["incident","safety","security","medical","emergency"],
@@ -85,7 +85,7 @@ def get_all_agent_cards() -> list[AgentCard]:
         ),
         AgentCard(
             agent_id    = "transport-optimizer-agent",
-            name        = "FlowRoute — Transport Agent",
+            name        = "FlowRoute - Transport Agent",
             description = "Transport load balancing, parking optimization, post-match dispersal planning.",
             endpoint    = f"{BASE_URL}/a2a/transport",
             tags        = ["transport","parking","shuttle","metro","routing"],
@@ -100,7 +100,7 @@ def get_all_agent_cards() -> list[AgentCard]:
         ),
         AgentCard(
             agent_id    = "eco-scoring-agent",
-            name        = "EcoScore — Sustainability Agent",
+            name        = "EcoScore - Sustainability Agent",
             description = "Carbon footprint calculation, sustainability scoring, eco advice for fans & venues.",
             endpoint    = f"{BASE_URL}/a2a/eco",
             tags        = ["eco","sustainability","carbon","green","sdg"],
@@ -115,7 +115,7 @@ def get_all_agent_cards() -> list[AgentCard]:
         ),
         AgentCard(
             agent_id    = "ops-command-agent",
-            name        = "OpsCommand — Supervisor Agent",
+            name        = "OpsCommand - Supervisor Agent",
             description = "Orchestrates all specialist agents, synthesizes operational intelligence, manages staff deployment.",
             endpoint    = f"{BASE_URL}/a2a/ops",
             tags        = ["operations","supervisor","staff","kpi","command"],

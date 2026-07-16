@@ -1,5 +1,5 @@
 """
-Stadium MCP Server — StadiumIQ
+Stadium MCP Server - StadiumIQ
 ================================
 Model Context Protocol server exposing stadium data as tools.
 Tools are called by LangGraph agents to get structured venue data.
@@ -27,7 +27,7 @@ class StadiumMCPServer:
             "get_services_nearby":  cls.get_services_nearby,
             "search_venue_entities":cls.search_venue_entities,
         }
-        log.info("StadiumMCPServer started — %d tools registered", len(cls._tools))
+        log.info("StadiumMCPServer started - %d tools registered", len(cls._tools))
 
     @classmethod
     def stop(cls) -> None:
@@ -199,5 +199,5 @@ class EcoMCPServer:
         if tool_name == "get_venue_eco_stats":
             return {"solar_kwh_today":4200,"waste_diverted_pct":78,"water_saved_litres":12000,"co2_avoided_kg":2100,"eco_rating":"A"}
         if tool_name == "get_eco_recommendations":
-            return {"tips":["Take metro — saves 75% vs car","Choose veggie meal — saves 2.7kg CO₂","Use refill water stations","Return waste to colour-coded bins"]}
+            return {"tips":["Take metro - saves 75% vs car","Choose veggie meal - saves 2.7kg CO₂","Use refill water stations","Return waste to colour-coded bins"]}
         return {"error": f"Unknown eco tool: {tool_name}"}

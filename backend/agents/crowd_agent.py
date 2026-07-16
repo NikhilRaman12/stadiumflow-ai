@@ -1,5 +1,5 @@
 """
-Crowd Intelligence Agent — LangGraph StateGraph
+Crowd Intelligence Agent - LangGraph StateGraph
 ================================================
 Analyzes crowd density, predicts bottlenecks, recommends
 flow optimizations. Called directly and via A2A protocol.
@@ -21,7 +21,7 @@ log = logging.getLogger("stadiumiq.agents.crowd")
 CROWD_SYSTEM_PROMPT = """You are the CrowdSense AI for FIFA World Cup 2026 stadium operations.
 Analyze crowd density data and provide precise operational recommendations.
 Always include: RISK LEVEL (LOW/MEDIUM/HIGH/CRITICAL), RECOMMENDED ACTION, TIME-TO-ACT.
-Be concise and decisive — operational staff need clear, actionable output.
+Be concise and decisive - operational staff need clear, actionable output.
 
 GRAPH CONTEXT:
 {graph_context}
@@ -110,7 +110,7 @@ class CrowdIntelligenceGraph:
         if self.llm is None:
             resp = (f"⚡ CROWD ANALYSIS | Risk: {risk}\n"
                     f"Bottlenecks detected: {len(bns)} zones\n"
-                    + "\n".join(f"• {b['zone'].upper()}: {b['density']}% — redirect to {b['recommended_gate']}" for b in bns[:3])
+                    + "\n".join(f"• {b['zone'].upper()}: {b['density']}% - redirect to {b['recommended_gate']}" for b in bns[:3])
                     + "\nAction: Deploy additional stewards to high-density zones immediately.")
             return {"response": resp, "messages": [AIMessage(content=resp)]}
         try:

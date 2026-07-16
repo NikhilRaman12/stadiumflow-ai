@@ -1,1 +1,1 @@
-﻿from .crowd_simulator import IncidentManager
+﻿from .crowd_simulator import IncidentManager

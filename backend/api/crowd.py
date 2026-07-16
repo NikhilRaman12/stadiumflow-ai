@@ -1,5 +1,5 @@
 """
-Crowd API — /api/crowd
+Crowd API - /api/crowd
 =======================
 Real-time crowd data and AI analysis endpoints.
 """

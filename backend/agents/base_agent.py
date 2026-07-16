@@ -1,5 +1,5 @@
 """
-LangGraph Base Agent — StadiumIQ
+LangGraph Base Agent - StadiumIQ
 ==================================
 Shared utilities, LLM client, and common graph node factories
 used by all 6 specialized LangGraph StateGraph agents.
@@ -23,7 +23,7 @@ def get_llm(temperature: float = 0.7, max_tokens: int = 1024) -> ChatGoogleGener
     """Return a configured Gemini 1.5 Pro LLM, or None if no API key."""
     key = os.getenv("GEMINI_API_KEY")
     if not key:
-        log.warning("GEMINI_API_KEY not set — agents in simulation mode")
+        log.warning("GEMINI_API_KEY not set - agents in simulation mode")
         return None
     return ChatGoogleGenerativeAI(
         model="gemini-1.5-pro",
@@ -65,7 +65,7 @@ def detect_language_node(state: dict) -> dict:
 
 
 def classify_intent(query: str) -> str:
-    """Rule-based intent classifier — feeds routing decisions in StateGraphs."""
+    """Rule-based intent classifier - feeds routing decisions in StateGraphs."""
     q = query.lower()
     if any(w in q for w in ["seat","section","gate","navigate","find","where","asiento","siège","sitz"]):
         return "navigation"
@@ -95,7 +95,7 @@ SIMULATED_RESPONSES = {
     "emergency":       "🚨 Nearest first aid: Gate B entrance (2 min). Call 911 or press RED button on any column. AED every 100m.",
     "operations":      "⚡ RISK: MEDIUM | Gate D 78% capacity → redirect to Gate E (32%). Deploy 2 stewards. Act in next 5 min.",
     "itinerary":       "📅 T-3h: Arrive Gate A | T-2h: Fan zone & food | T-1h: Seat by kick-off | HT: concourse level 2 | FT+30: Metro exit",
-    "general":         "🤖 Hi! I'm ARIA — your FIFA WC 2026 AI. Ask me about navigation, queues, transport, accessibility, or eco tips!",
+    "general":         "🤖 Hi! I'm ARIA - your FIFA WC 2026 AI. Ask me about navigation, queues, transport, accessibility, or eco tips!",
 }
 
 

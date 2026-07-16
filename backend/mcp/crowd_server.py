@@ -1,1 +1,1 @@
-﻿from .stadium_server import CrowdMCPServer
+﻿from .stadium_server import CrowdMCPServer

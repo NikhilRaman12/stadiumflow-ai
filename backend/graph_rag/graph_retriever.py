@@ -1,9 +1,9 @@
 """
-GraphRAG Retriever — StadiumIQ
+GraphRAG Retriever - StadiumIQ
 ===============================
 Two-stage retrieval:
-  1. Semantic  — FAISS vector search over node text chunks
-  2. Structural — NetworkX BFS to expand retrieved nodes into
+  1. Semantic  - FAISS vector search over node text chunks
+  2. Structural - NetworkX BFS to expand retrieved nodes into
                   a meaningful subgraph (community context)
 
 Returns rich, graph-structured context strings for LLM prompting.
@@ -26,7 +26,7 @@ try:
     FAISS_AVAILABLE = True
 except ImportError:
     FAISS_AVAILABLE = False
-    log.warning("faiss-cpu or langchain-google-genai not installed — falling back to keyword retrieval")
+    log.warning("faiss-cpu or langchain-google-genai not installed - falling back to keyword retrieval")
 
 
 class GraphRAGRetriever:
@@ -49,7 +49,7 @@ class GraphRAGRetriever:
         self.chunks = self.kg.to_text_chunks()
 
         if not FAISS_AVAILABLE or not os.getenv("GEMINI_API_KEY"):
-            log.warning("FAISS unavailable or no API key — keyword-only retrieval active")
+            log.warning("FAISS unavailable or no API key - keyword-only retrieval active")
             return
 
         try:
@@ -75,7 +75,7 @@ class GraphRAGRetriever:
             self.index = faiss.IndexFlatIP(dim)          # inner-product similarity
             faiss.normalize_L2(mat)
             self.index.add(mat)
-            log.info("FAISS index built — %d vectors, dim=%d", self.index.ntotal, dim)
+            log.info("FAISS index built - %d vectors, dim=%d", self.index.ntotal, dim)
         except Exception as e:
             log.error("FAISS index build failed: %s", e)
             self.index = None
@@ -101,7 +101,7 @@ class GraphRAGRetriever:
         return context
 
     async def retrieve_for_venue(self, venue_id: str, query: str, top_k: int = 6) -> str:
-        """Venue-scoped retrieval — only nodes belonging to the given venue."""
+        """Venue-scoped retrieval - only nodes belonging to the given venue."""
         base_ctx = await self.retrieve(query, top_k=top_k)
         # Add venue-specific node directly
         vid  = f"venue:{venue_id}"

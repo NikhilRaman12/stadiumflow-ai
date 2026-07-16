@@ -1,5 +1,5 @@
 """
-Incident Response Agent — LangGraph StateGraph
+Incident Response Agent - LangGraph StateGraph
 ===============================================
 Detects, classifies, scores severity, and orchestrates
 response for stadium incidents. Integrates with A2A to
@@ -27,7 +27,7 @@ Format:
   "severity": 1-5,
   "severity_label": "LOW|MEDIUM|HIGH|CRITICAL|EXTREME",
   "incident_type": "medical|security|crowd|facility|weather|fire|other",
-  "immediate_action": "string — first action in next 60 seconds",
+  "immediate_action": "string - first action in next 60 seconds",
   "resources_needed": ["Security", "Medical", "Fire", "Crowd Management", "Logistics"],
   "evacuation_needed": false,
   "crowd_impact": "LOW|MEDIUM|HIGH",
@@ -100,7 +100,7 @@ class IncidentResponseGraph:
             )
             return {"graph_context": ctx}
         except Exception:
-            return {"graph_context": "Emergency context unavailable — follow standard protocols."}
+            return {"graph_context": "Emergency context unavailable - follow standard protocols."}
 
     async def _assess_severity(self, state: IncidentAgentState) -> dict:
         itype = state.get("incident_type", "other")

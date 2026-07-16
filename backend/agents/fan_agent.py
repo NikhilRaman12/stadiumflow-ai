@@ -1,5 +1,5 @@
 """
-Fan Assistant — LangGraph StateGraph Agent
+Fan Assistant - LangGraph StateGraph Agent
 ==========================================
 Handles all fan-facing queries: navigation, services,
 multilingual chat, accessibility, itinerary planning.
@@ -32,7 +32,7 @@ from .base_agent import get_llm, memory, detect_language_node, classify_intent, 
 
 log = logging.getLogger("stadiumiq.agents.fan")
 
-FAN_SYSTEM_PROMPT = """You are ARIA — the official AI assistant for StadiumIQ at FIFA World Cup 2026.
+FAN_SYSTEM_PROMPT = """You are ARIA - the official AI assistant for StadiumIQ at FIFA World Cup 2026.
 You help fans navigate stadiums, find services, plan their day, and stay safe.
 Be friendly, concise, and always safety-first.
 AUTO-DETECT the user's language and RESPOND in that same language.

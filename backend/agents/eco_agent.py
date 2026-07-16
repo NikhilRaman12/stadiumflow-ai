@@ -1,5 +1,5 @@
 """
-EcoScore Agent — LangGraph StateGraph
+EcoScore Agent - LangGraph StateGraph
 ======================================
 Calculates carbon footprints, tracks sustainability metrics,
 and provides eco-friendly recommendations for fans and venues.
@@ -111,9 +111,9 @@ class EcoScoringGraph:
 
         recs = []
         if mode in ("car_petrol","taxi","flight"):
-            recs.append("🚌 Switch to metro/shuttle — save up to 75% CO₂ on transport")
+            recs.append("🚌 Switch to metro/shuttle - save up to 75% CO₂ on transport")
         if "beef_burger" in state.get("food_choices",[]):
-            recs.append("🥗 Choose veggie option — saves 2.7kg CO₂ per meal")
+            recs.append("🥗 Choose veggie option - saves 2.7kg CO₂ per meal")
         if eco_score >= 80:
             recs.append("🌟 Excellent eco choice! You're a Green Champion today")
 

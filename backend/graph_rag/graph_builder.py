@@ -1,5 +1,5 @@
 """
-GraphRAG Knowledge Graph Builder — StadiumIQ
+GraphRAG Knowledge Graph Builder - StadiumIQ
 =============================================
 Builds a rich NetworkX knowledge graph of stadium entities and
 relationships for use by the GraphRAG retrieval pipeline.
@@ -53,7 +53,7 @@ class StadiumKnowledgeGraph:
         self._add_service_nodes()
 
         log.info(
-            "KG ready — %d nodes / %d edges",
+            "KG ready - %d nodes / %d edges",
             self.graph.number_of_nodes(),
             self.graph.number_of_edges(),
         )

@@ -556,6 +556,11 @@
           <option value="volunteer">Volunteer</option>
         </select>
       </div>
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Backend Server URL</label>
+        <input type="text" id="backendUrlInput" class="input" placeholder="https://..." style="width:100%;font-size:0.8rem;"/>
+        <div style="font-size:0.7rem;color:var(--text-tertiary);margin-top:4px;">Paste your live backend URL (e.g., ngrok HTTPS link). Leave blank to use current origin.</div>
+      </div>
       <button class="btn btn-primary" style="width:100%;" onclick="saveSettings()">
         <i data-lucide="check" style="width:14px;height:14px;"></i> Save Settings
       </button>
@@ -574,13 +579,14 @@
   let apiKey     = localStorage.getItem('stadiumiq_gemini_key') || '';
   let venueId    = localStorage.getItem('stadiumiq_venue') || 'met';
   let role       = localStorage.getItem('stadiumiq_role') || 'fan';
+  let backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
   let chatHistory= [];
   let travelMode = 'metro';
   let distance   = 25;
   let ecoScore   = 72;
 
   const VENUE_NAMES = {met:'MetLife Stadium · NJ',dal:'AT&T Stadium · TX',la:'SoFi Stadium · CA',atz:'Estadio Azteca · CDMX',bc:'BC Place · Vancouver',sf:"Levi's Stadium · CA"};
-  const BACKEND_URL = window.location.origin;
+  let BACKEND_URL = backendUrl || window.location.origin;
 
   // ── Init ─────────────────────────────────────────────────────────
   function init() {
@@ -769,6 +775,7 @@
     document.getElementById('apiKeyInput').value = apiKey;
     document.getElementById('venueSelect').value = venueId;
     document.getElementById('roleSelect').value  = role;
+    document.getElementById('backendUrlInput').value = backendUrl;
     document.getElementById('settingsOverlay').classList.add('open');
     lucide.createIcons();
   }
@@ -776,16 +783,22 @@
   function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
 
   function saveSettings() {
-    apiKey  = document.getElementById('apiKeyInput').value.trim();
-    venueId = document.getElementById('venueSelect').value;
-    role    = document.getElementById('roleSelect').value;
+    apiKey     = document.getElementById('apiKeyInput').value.trim();
+    venueId    = document.getElementById('venueSelect').value;
+    role       = document.getElementById('roleSelect').value;
+    backendUrl = document.getElementById('backendUrlInput').value.trim();
+
     if (apiKey) localStorage.setItem('stadiumiq_gemini_key', apiKey);
     localStorage.setItem('stadiumiq_venue', venueId);
     localStorage.setItem('stadiumiq_role',  role);
+    localStorage.setItem('stadiumiq_backend_url', backendUrl);
+
+    BACKEND_URL = backendUrl || window.location.origin;
+
     document.getElementById('venueLabel').textContent = VENUE_NAMES[venueId];
     updateAIPill();
     closeSettings();
-    showToast('Settings saved' + (apiKey ? ' — Gemini AI active!' : ''), apiKey ? 'success' : 'info');
+    showToast('Settings saved successfully', 'success');
   }
 
   function updateVenue(v) { venueId = v; }

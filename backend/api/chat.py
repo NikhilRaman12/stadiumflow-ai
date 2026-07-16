@@ -1,5 +1,5 @@
 """
-Chat API — /api/chat
+Chat API - /api/chat
 =====================
 Routes ARIA chat to the appropriate LangGraph agent based on role.
 Supports SSE streaming for progressive responses.
@@ -46,7 +46,7 @@ async def chat(body: ChatRequest, request: Request):
     graph = getattr(request.app.state, graph_attr, None)
 
     if graph is None:
-        raise HTTPException(503, "AI agent not ready — startup may be in progress")
+        raise HTTPException(503, "AI agent not ready - startup may be in progress")
 
     try:
         config  = {"configurable": {"thread_id": body.session_id}}

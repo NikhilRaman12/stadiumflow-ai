@@ -5,4 +5,4 @@ class StreamToLogger:
     def write(self, buf):
         for line in buf.rstrip().splitlines(): self.logger.log(self.level, line.rstrip())
     def flush(self): pass
-stream = StreamToLogger(logging.getLogger('stadiumiq'), logging.INFO)
+stream = StreamToLogger(logging.getLogger('stadiumiq'), logging.INFO)

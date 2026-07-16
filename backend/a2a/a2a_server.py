@@ -1,5 +1,5 @@
 """
-A2A Server — StadiumIQ
+A2A Server - StadiumIQ
 ========================
 Implements Google's Agent-to-Agent (A2A) protocol HTTP endpoints.
 Each agent is exposed at /a2a/{agent_name} accepting Task objects
@@ -53,7 +53,7 @@ class A2ARouter:
     def _register_routes(self) -> None:
         router = self.router
 
-        @router.get("/agents", summary="A2A Agent Registry — discover all agents")
+        @router.get("/agents", summary="A2A Agent Registry - discover all agents")
         async def list_agents():
             """Return all Agent Cards in the StadiumIQ multi-agent system."""
             cards = get_all_agent_cards()
