@@ -111,10 +111,11 @@
 <div class="ops-layout">
 
   <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
+  <aside class="sidebar" role="tablist" aria-label="Operations sections panel">
     <div class="sidebar-brand">⚡ StadiumIQ<br/><span style="font-size:0.7rem;font-weight:400;color:var(--text-tertiary);-webkit-text-fill-color:var(--text-tertiary);">OpsCommand Center</span></div>
 
     <div style="padding:12px 8px;">
+      <label for="venueSelectOps" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Select Venue</label>
       <select class="input" id="venueSelectOps" style="width:100%;font-size:0.8rem;" onchange="switchVenue(this.value)">
         <option value="met">MetLife Stadium</option>
         <option value="dal">AT&T Stadium</option>
@@ -126,32 +127,32 @@
     </div>
 
     <div class="sidebar-section">Operations</div>
-    <button class="sidebar-item active" onclick="showPanel('overview',this)">
+    <button class="sidebar-item active" role="tab" aria-selected="true" aria-controls="panel-overview" onclick="showPanel('overview',this)">
       <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Overview
     </button>
-    <button class="sidebar-item" onclick="showPanel('crowd',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-crowd" onclick="showPanel('crowd',this)">
       <i data-lucide="users" style="width:16px;height:16px;"></i> CrowdSense
       <span class="sidebar-badge" style="background:rgba(245,158,11,0.2);color:var(--status-warning);">MEDIUM</span>
     </button>
-    <button class="sidebar-item" onclick="showPanel('incidents',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-incidents" onclick="showPanel('incidents',this)">
       <i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Incidents
       <span class="sidebar-badge" id="incBadge" style="background:rgba(239,68,68,0.2);color:var(--status-danger);">3</span>
     </button>
-    <button class="sidebar-item" onclick="showPanel('staff',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-staff" onclick="showPanel('staff',this)">
       <i data-lucide="hard-hat" style="width:16px;height:16px;"></i> Staff Deploy
     </button>
-    <button class="sidebar-item" onclick="showPanel('transport',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-transport" onclick="showPanel('transport',this)">
       <i data-lucide="navigation" style="width:16px;height:16px;"></i> Transport
     </button>
-    <button class="sidebar-item" onclick="showPanel('eco',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-eco" onclick="showPanel('eco',this)">
       <i data-lucide="leaf" style="width:16px;height:16px;"></i> Sustainability
     </button>
 
     <div class="sidebar-section">AI Agents</div>
-    <button class="sidebar-item" onclick="showPanel('agents',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-agents" onclick="showPanel('agents',this)">
       <i data-lucide="cpu" style="width:16px;height:16px;"></i> Agent Status
     </button>
-    <button class="sidebar-item" onclick="showPanel('aria_ops',this)">
+    <button class="sidebar-item" role="tab" aria-selected="false" aria-controls="panel-aria_ops" onclick="showPanel('aria_ops',this)">
       <i data-lucide="bot" style="width:16px;height:16px;"></i> ARIA Ops Chat
     </button>
 
