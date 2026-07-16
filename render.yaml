@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: stadiumflow-backend
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "https://nikhilraman12.github.io,http://localhost:8000"
+      - key: PORT
+        value: "8000"
+      - key: LOG_LEVEL
+        value: "INFO"
