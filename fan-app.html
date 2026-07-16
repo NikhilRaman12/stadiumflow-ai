@@ -631,30 +631,39 @@
 
     try {
       let responseText;
-      if (apiKey) {
-        // Try backend API first
-        try {
-          const res = await fetch(`${BACKEND_URL}/api/chat`, {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({message:text, session_id:getSession(), venue_id:venueId, role, context:{}})
-          });
-          if (res.ok) {
-            const data = await res.json();
-            responseText = data.response;
-          }
-        } catch(e) { /* fallback to direct Gemini */ }
+      // 1. Try backend API first (routes to FastAPI, LangGraph, and GraphRAG)
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/chat`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({message:text, session_id:getSession(), venue_id:venueId, role, context:{}})
+        });
+        if (res.ok) {
+          const data = await res.json();
+          responseText = data.response;
+        }
+      } catch(e) {
+        console.warn('Backend API connection failed, using client fallback', e);
+      }
 
-        // Direct Gemini API fallback
-        if (!responseText) {
+      // 2. Direct client-side Gemini fallback (if client has an API key stored)
+      if (!responseText && apiKey) {
+        try {
           const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({contents:[{role:'user',parts:[{text:`You are ARIA, FIFA World Cup 2026 AI assistant at ${VENUE_NAMES[venueId]}. User: ${text}`}]}],generationConfig:{temperature:0.75,maxOutputTokens:400}})
           });
-          const d = await r.json();
-          responseText = d?.candidates?.[0]?.content?.parts?.[0]?.text || 'Response unavailable';
+          if (r.ok) {
+            const d = await r.json();
+            responseText = d?.candidates?.[0]?.content?.parts?.[0]?.text;
+          }
+        } catch(e) {
+          console.error('Direct Gemini call failed', e);
         }
-      } else {
+      }
+
+      // 3. Simulated response fallback
+      if (!responseText) {
         responseText = getSimulatedResponse(text);
       }
       removeTyping();
