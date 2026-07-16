@@ -169,7 +169,7 @@ app.add_middleware(CORSMiddleware,
     allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # ── Serve frontend ────────────────────────────────────────────────
-FRONTEND = Path(__file__).parent.parent / "frontend"
+FRONTEND = Path(__file__).parent / "frontend" if (Path(__file__).parent / "frontend").exists() else Path(__file__).parent.parent / "frontend"
 
 @app.get("/")
 async def root():
