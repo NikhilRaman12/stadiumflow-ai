@@ -202,11 +202,13 @@ async def root():
     return FileResponse(str(idx)) if idx.exists() else JSONResponse({"message":"StadiumIQ API - /api/docs"})
 
 @app.get("/fan")
+@app.get("/fan-app.html")
 async def fan_app():
     f = FRONTEND / "fan-app.html"
     return FileResponse(str(f)) if f.exists() else JSONResponse({"error":"fan-app.html not found"})
 
 @app.get("/ops")
+@app.get("/ops-dashboard.html")
 async def ops_dash():
     f = FRONTEND / "ops-dashboard.html"
     return FileResponse(str(f)) if f.exists() else JSONResponse({"error":"ops-dashboard.html not found"})
