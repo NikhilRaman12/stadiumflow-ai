@@ -201,6 +201,9 @@
 </head>
 <body class="bg-grid">
 <div class="app-shell" id="appShell">
+  <div id="simDisclaimer" style="display:none;background:rgba(245,158,11,0.15);color:var(--status-warning);font-size:0.75rem;padding:8px 12px;text-align:center;border-bottom:1px solid rgba(245,158,11,0.3);line-height:1.4;">
+    ⚠️ **Prototype using simulated matchday data.** Human authorization is required for operational and safety-critical actions.
+  </div>
 
   <!-- ── TOP BAR ── -->
   <div class="top-bar">
@@ -228,7 +231,7 @@
           </div>
           <div>
             <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;">ARIA</div>
-            <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">AI Assistant · 32 Languages · Gemini 1.5 Pro</div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">AI Assistant · Designed to support 32 languages · Gemini 2.0</div>
           </div>
         </div>
       </div>
@@ -239,7 +242,7 @@
           <div class="msg-avatar ai"><i data-lucide="bot" style="width:12px;height:12px;"></i></div>
           <div class="chat-bubble ai">
             👋 <strong>Welcome to FIFA World Cup 2026!</strong> I'm ARIA, your AI matchday assistant.<br><br>
-            I can help with navigation, queues, transport, accessibility, eco tips, and more — in <strong>32 languages</strong>.<br><br>
+            I can help with navigation, queues, transport, accessibility, eco tips, and more — **designed to support 32 languages**.<br><br>
             Ask me anything! 🏟️⚽
           </div>
         </div>
@@ -270,7 +273,7 @@
     <div class="page-inner">
       <!-- Live match widget -->
       <div class="match-hero">
-        <div style="font-size:0.7rem;color:var(--text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">🔴 LIVE · 67'</div>
+        <div id="liveIndicator" style="font-size:0.7rem;color:var(--text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">🔴 LIVE · 67'</div>
         <div class="match-teams">
           <div><div class="team-flag">🇺🇸</div><div class="team-name">USA</div></div>
           <div>
@@ -314,7 +317,7 @@
       <!-- Crowd mini map -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title"><i data-lucide="activity" style="width:14px;height:14px;color:var(--brand-primary);"></i> Live Crowd Map</span>
+          <span class="card-title" id="crowdTitle"><i data-lucide="activity" style="width:14px;height:14px;color:var(--brand-primary);"></i> Live Crowd Map</span>
           <span class="badge badge-live">LIVE</span>
         </div>
         <div class="crowd-map" id="crowdMap">
@@ -341,6 +344,7 @@
         <div class="queue-item"><div class="queue-row"><span class="queue-name">🚻 Restrooms — Section 12</span><span class="queue-wait" style="color:var(--brand-emerald);">3 min</span></div><div class="progress-bar"><div class="progress-fill green" style="width:25%"></div></div></div>
         <div class="queue-item"><div class="queue-row"><span class="queue-name">🚻 Restrooms — Section 15</span><span class="queue-wait" style="color:var(--status-danger);">14 min</span></div><div class="progress-bar"><div class="progress-fill danger" style="width:85%"></div></div></div>
       </div>
+      <div style="font-size:0.65rem;color:var(--text-tertiary);text-align:center;margin-top:20px;padding:8px;border-top:1px solid var(--glass-border);">* All metrics, crowds, transport wait times, and schedules are simulated prototype data, not official FIFA figures.</div>
     </div>
   </div>
 
@@ -403,6 +407,7 @@
           <div class="stat-card green"><div class="stat-label">Water Saved</div><div class="stat-value">12<span style="font-size:1rem;">kL</span></div></div>
         </div>
       </div>
+      <div style="font-size:0.65rem;color:var(--text-tertiary);text-align:center;margin-top:20px;padding:8px;border-top:1px solid var(--glass-border);">* All metrics, crowds, transport wait times, and schedules are simulated prototype data, not official FIFA figures.</div>
     </div>
   </div>
 
@@ -414,7 +419,7 @@
         Match ends in ~23 min. Plan your exit now for best experience.
       </div>
 
-      <div style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Live Transport Options</div>
+      <div id="transportTitle" style="font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Live Transport Options</div>
 
       <div style="display:flex;flex-direction:column;gap:10px;" id="transportList">
         <div class="transport-card">
@@ -468,6 +473,7 @@
         <i data-lucide="zap" style="width:14px;height:14px;"></i> Get AI Route Recommendation
       </button>
       <div id="transportAiResponse" style="display:none;" class="card"></div>
+      <div style="font-size:0.65rem;color:var(--text-tertiary);text-align:center;margin-top:20px;padding:8px;border-top:1px solid var(--glass-border);">* All metrics, crowds, transport wait times, and schedules are simulated prototype data, not official FIFA figures.</div>
     </div>
   </div>
 
@@ -589,17 +595,63 @@
   let BACKEND_URL = backendUrl || window.location.origin;
 
   // ── Init ─────────────────────────────────────────────────────────
+  let simulationFallbackActive = true;
+
   function init() {
     document.getElementById('venueLabel').textContent = VENUE_NAMES[venueId] || venueId;
     updateAIPill();
     animateEcoCircle(72);
+    checkSimulationStatus();
     if (!apiKey) setTimeout(() => openSettings(), 800);
+  }
+
+  async function checkSimulationStatus() {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/health`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.mode === 'demo' || data.services?.gemini === 'demo_mode') {
+          simulationFallbackActive = true;
+        } else {
+          simulationFallbackActive = false;
+        }
+      }
+    } catch(e) {
+      simulationFallbackActive = true;
+    }
+    updateSimulationUI();
+  }
+
+  function updateSimulationUI() {
+    const banner = document.getElementById('simDisclaimer');
+    if (simulationFallbackActive) {
+      if (banner) banner.style.display = 'block';
+      
+      // Update badge labels
+      document.querySelectorAll('.badge-live').forEach(el => {
+        el.textContent = 'SIMULATED LIVE';
+      });
+      
+      const liveIndicator = document.getElementById('liveIndicator');
+      if (liveIndicator) liveIndicator.textContent = '🔴 SIMULATED LIVE · 67\'';
+
+      const crowdTitle = document.getElementById('crowdTitle');
+      if (crowdTitle) crowdTitle.innerHTML = '<i data-lucide="activity" style="width:14px;height:14px;color:var(--brand-primary);"></i> Crowd Map (Simulated)';
+
+      const transportTitle = document.getElementById('transportTitle');
+      if (transportTitle) transportTitle.textContent = 'Transport Options (Simulated)';
+      
+      lucide.createIcons();
+    } else {
+      if (banner) banner.style.display = 'none';
+    }
   }
 
   function updateAIPill() {
     const pill = document.getElementById('aiPill');
     if (apiKey) {
-      pill.textContent = '● AI Live'; pill.className = 'ai-pill live';
+      pill.textContent = simulationFallbackActive ? '● AI Simulated Live' : '● AI Live'; 
+      pill.className = 'ai-pill live';
     } else {
       pill.textContent = '● Demo Mode'; pill.className = 'ai-pill demo';
     }
@@ -641,6 +693,7 @@
 
     try {
       let responseText;
+      let isSimulated = false;
       // 1. Try backend API first (routes to FastAPI, LangGraph, and GraphRAG)
       try {
         const res = await fetch(`${BACKEND_URL}/api/chat`, {
@@ -651,6 +704,9 @@
         if (res.ok) {
           const data = await res.json();
           responseText = data.response;
+          if (data.simulated) {
+            isSimulated = true;
+          }
         }
       } catch(e) {
         console.warn('Backend API connection failed, using client fallback', e);
@@ -675,7 +731,13 @@
       // 3. Simulated response fallback
       if (!responseText) {
         responseText = getSimulatedResponse(text);
+        isSimulated = true;
       }
+      
+      if (isSimulated) {
+        responseText = "⚠️ **Gemini Offline (Simulation Fallback)**\n\n" + responseText;
+      }
+      
       removeTyping();
       appendMessage('ai', responseText);
       chatHistory.push({role:'assistant', content:responseText});
@@ -713,13 +775,44 @@
 
   function getSimulatedResponse(q) {
     q = q.toLowerCase();
-    if (q.includes('seat') || q.includes('where'))    return '🎯 Check your ticket for Gate + Section + Row. Follow colored floor pathways. Staff stationed every 50m!';
-    if (q.includes('food') || q.includes('eat') || q.includes('queue')) return '🍔 Best queue: Level 2 (4 min ✅). Level 1 (9 min). Eco pick: veggie burger saves 2.1kg CO₂!';
-    if (q.includes('wheelchair') || q.includes('access')) return '♿ Accessible entry: Gate A (ramp + lift). All levels. Accessible seats: Section F, Rows 1-2. Need escort? Press blue button at Gate A.';
-    if (q.includes('transport') || q.includes('bus') || q.includes('metro')) return '🚌 Metro Line 3: 12min wait ✅ | Shuttle Zone C: 6min ✅ | Parking Zone D: 22% full (recommended)';
-    if (q.includes('eco') || q.includes('carbon') || q.includes('green')) return '🌱 Your EcoScore: 72/100 ⭐. Metro travel saved 4.2kg CO₂. 36 EcoPoints earned today!';
-    if (q.includes('emergency') || q.includes('medical') || q.includes('help')) return '🚨 Medical: Gate B entrance (2 min). Call 911. Press RED button on any column. AED every 100m on concourse.';
-    return `🤖 Hi! I'm ARIA — your FIFA WC 2026 AI.\n\nSet your Gemini API key in ⚙️ Settings for full AI in 32 languages!\n\nI can help with: 🎯 Navigation · 🍔 Queues · ♿ Accessibility · 🚌 Transport · 🌱 EcoScore · 🚨 Safety`;
+    
+    // Heuristically extract active venue accessibility details
+    let v_id = venueId;
+    let accessibility_guideline = '';
+    
+    const acc_details = {
+      met: { gate: "Gate A or Gate C (fully accessible with flat ramps)", lifts: "Lifts A1, A2, and B1 are fully operational. Note: Lift B3 is temporarily closed for maintenance.", routes: "Use Level 1 concourse elevator lobby. Follow blue accessibility paths.", quiet: " sensory sensory room Plaza Level Section 117.", assistance: "Press blue button at Gate A/C, or text ACCESS to 84444." },
+      dal: { gate: "Gates 1 and 3 (low-incline ramps)", lifts: "Lifts L1 and L3 operational. Access to all levels.", routes: "Use elevator lobby near Gate 1.", quiet: " sensor Sensory Concourse behind Section 240.", assistance: "Speak to stewards in blue vest or Plaza Section 102." },
+      la: { gate: "North Entry and South Entry", lifts: "Lifts VIP North and South lobbies operational.", routes: "Pedestrian bridge connects parking P1-P4.", quiet: " Sensory Room Level 3 near East suites.", assistance: "ADA assistants or guest hotline at 424-306-8000." },
+      atz: { gate: "Puerta Norte and Puerta Sur", lifts: "Lifts North side operational. Sur requires badge.", routes: "Enter North ramp → Gradería → follow blue marks.", quiet: " Special Services area near Cancha Section 10.", assistance: "Volunteers in green vests stationed at ramps." },
+      bc: { gate: "Gate A or B (ramp access)", lifts: "Lifts at Gates A and B operational.", routes: "Use lift at Gate A to Club level.", quiet: " Sensory Quiet room behind Section 110.", assistance: "Guest Services Section 104 or hosts in red vest." },
+      sf: { gate: "Gate A or C (level entry)", lifts: "Lifts at Gate A and C operational.", routes: "Use Gate A elevator for Club levels.", quiet: " sensory Intel Plaza level Section 101.", assistance: "Kiosk at Gate A or text 408-579-5100." }
+    };
+    
+    let details = acc_details[v_id] || acc_details.met;
+
+    if (q.includes('wheelchair') || q.includes('access') || q.includes('lift') || q.includes('elevator') || q.includes('ramp') || q.includes('quiet') || q.includes('sensory')) {
+      return `♿ **Accessibility Guide — ${v_id.toUpperCase()} Venue (Simulated)**\n` +
+             `• **Accessible Entry**: Enter through ${details.gate}.\n` +
+             `• **Elevators/Lifts**: ${details.lifts}\n` +
+             `• **Alternative Routes**: ${details.routes}\n` +
+             `• **Quiet/Sensory Zones**: ${details.quiet}\n` +
+             `• **Staff Assistance**: ${details.assistance}`;
+    }
+
+    if (q.includes('emergency') || q.includes('medical') || q.includes('help') || q.includes('security') || q.includes('injured')) {
+      return `🚨 **EMERGENCY ESCALATION REGISTERED (UNCONFIRMED)**\n` +
+             `• **Immediate Action**: Call 911 directly or press the physical RED SOS button on any stadium column. AEDs are located every 100m.\n` +
+             `• **Escalation Path**: Incident has been logged. Duty Manager is notified.\n` +
+             `⚠️ **Human Supervisor Approval Required**: Staff dispatch, medical team deployment, or area evacuation cannot be executed automatically. A human operator must confirm the dispatch in the Ops Dashboard.`;
+    }
+
+    if (q.includes('seat') || q.includes('where'))    return '🎯 Check your ticket for Gate + Section + Row. Follow colored floor pathways. Staff stationed every 50m! (Simulated)';
+    if (q.includes('food') || q.includes('eat') || q.includes('queue')) return '🍔 Best queue: Level 2 (4 min ✅). Level 1 (9 min). Eco pick: veggie burger saves 2.1kg CO₂! (Simulated)';
+    if (q.includes('transport') || q.includes('bus') || q.includes('metro')) return '🚌 Metro Line 3: 12min wait ✅ | Shuttle Zone C: 6min ✅ | Parking Zone D: 22% full (recommended) (Simulated)';
+    if (q.includes('eco') || q.includes('carbon') || q.includes('green')) return '🌱 Your EcoScore: 72/100 ⭐. Metro travel saved 4.2kg CO₂. 36 EcoPoints earned today! (Simulated)';
+    
+    return `🤖 Hi! I'm ARIA — your FIFA WC 2026 AI assistant.\n\nSet your Gemini API key in Settings for full AI designed to support 32 languages!\n\nI can help with: 🎯 Navigation · 🍔 Queues · ♿ Accessibility · 🚌 Transport · 🌱 EcoScore · 🚨 Safety`;
   }
 
   // ── Eco ──────────────────────────────────────────────────────────

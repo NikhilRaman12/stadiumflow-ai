@@ -168,6 +168,9 @@
 
   <!-- ── MAIN ── -->
   <div class="main-area">
+    <div id="simDisclaimer" style="display:none;background:rgba(245,158,11,0.15);color:var(--status-warning);font-size:0.75rem;padding:8px 12px;text-align:center;border-bottom:1px solid rgba(245,158,11,0.3);line-height:1.4;">
+      ⚠️ **Prototype using simulated matchday data.** Human authorization is required for operational and safety-critical actions.
+    </div>
 
     <!-- Header -->
     <div class="ops-header">
@@ -176,7 +179,7 @@
         <div style="font-size:0.72rem;color:var(--text-tertiary);" id="panelSubtitle">MetLife Stadium · Match Day · USA 2-1 SRB · 67'</div>
       </div>
       <div class="ops-header-actions">
-        <span class="badge badge-live"><span class="pulse-dot red" style="display:inline-block;width:6px;height:6px;"></span> LIVE</span>
+        <span class="badge badge-live" id="liveBadgeOps"><span class="pulse-dot red" style="display:inline-block;width:6px;height:6px;"></span> LIVE</span>
         <button class="btn btn-ghost btn-sm" onclick="refreshAll()"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh</button>
         <a href="fan-app.html" class="btn btn-outline btn-sm"><i data-lucide="smartphone" style="width:14px;height:14px;"></i> Fan App</a>
         <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="home" style="width:14px;height:14px;"></i></a>
@@ -246,7 +249,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="card" style="grid-column:span 2;">
           <div class="card-header">
-            <span class="card-title"><i data-lucide="map" style="width:14px;height:14px;color:var(--brand-primary);"></i> Live Stadium Heat Map</span>
+            <span class="card-title" id="heatmapTitle"><i data-lucide="map" style="width:14px;height:14px;color:var(--brand-primary);"></i> Live Stadium Heat Map</span>
             <span class="badge badge-live">Auto-refresh 10s</span>
           </div>
           <div class="heatmap-grid" id="heatmapGrid"><!-- JS-generated --></div>
@@ -411,7 +414,7 @@
 
     <!-- OTHER PANELS: transport, eco (simplified) -->
     <div class="panel" id="panel-transport">
-      <div class="card"><div class="card-header"><span class="card-title">🚌 Transport Flow Monitor</span><span class="badge badge-live">LIVE</span></div>
+      <div class="card"><div class="card-header"><span class="card-title" id="transportTitleOps">🚌 Transport Flow Monitor</span><span class="badge badge-live">LIVE</span></div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
           <div class="stat-card cyan"><div class="stat-label">Metro Wait</div><div class="stat-value">12 min</div><div class="stat-delta neutral">Line 3 · 68% load</div></div>
           <div class="stat-card purple"><div class="stat-label">Shuttle Wait</div><div class="stat-value">6 min</div><div class="stat-delta up">Zone C · 42% ✅</div></div>
@@ -466,6 +469,7 @@ let backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
 let BACKEND_URL = backendUrl || window.location.origin;
 let venueId  = 'met';
 let opsChatHistory = [];
+let simulationFallbackActive = true;
 
 // ── Init ──────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
@@ -473,13 +477,64 @@ window.addEventListener('load', () => {
   buildHeatmap();
   initCharts();
   fetchHealthStatus();
+  checkSimulationStatus();
   setInterval(updateHeatmap, 8000);
   setInterval(updateKPIs, 15000);
 });
 
+async function checkSimulationStatus() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/health`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.mode === 'demo' || data.services?.gemini === 'demo_mode') {
+        simulationFallbackActive = true;
+      } else {
+        simulationFallbackActive = false;
+      }
+    }
+  } catch(e) {
+    simulationFallbackActive = true;
+  }
+  updateSimulationUI();
+}
+
+function updateSimulationUI() {
+  const banner = document.getElementById('simDisclaimer');
+  if (simulationFallbackActive) {
+    if (banner) banner.style.display = 'block';
+    
+    // Update badge labels
+    document.querySelectorAll('.badge-live').forEach(el => {
+      if (el.id === 'liveBadgeOps') {
+        el.innerHTML = '<span class="pulse-dot red" style="display:inline-block;width:6px;height:6px;"></span> SIMULATED LIVE';
+      } else {
+        el.textContent = 'SIMULATED LIVE';
+      }
+    });
+
+    const heatmapTitle = document.getElementById('heatmapTitle');
+    if (heatmapTitle) heatmapTitle.innerHTML = '<i data-lucide="map" style="width:14px;height:14px;color:var(--brand-primary);"></i> Stadium Heat Map (Simulated)';
+
+    const transportTitleOps = document.getElementById('transportTitleOps');
+    if (transportTitleOps) transportTitleOps.textContent = 'Transport Flow Monitor (Simulated)';
+    
+    // Mark metrics as simulated
+    document.querySelectorAll('.stat-card .stat-label').forEach(el => {
+      if (!el.textContent.includes('(Simulated)')) {
+        el.textContent += ' (Simulated)';
+      }
+    });
+    
+    lucide.createIcons();
+  } else {
+    if (banner) banner.style.display = 'none';
+  }
+}
+
 function updateAIStatus() {
   const pill = document.getElementById('aiStatusOps');
-  if (apiKey) { pill.textContent='● Gemini Live'; pill.className='badge badge-success'; }
+  if (apiKey) { pill.textContent = simulationFallbackActive ? '● AI Simulated Live' : '● Gemini Live'; pill.className='badge badge-success'; }
   else         { pill.textContent='● Demo Mode';   pill.className='badge badge-warning'; }
 }
 
@@ -645,31 +700,82 @@ function resolveInc(id) { showToast(`Incident INC-${id} marked resolved`,'succes
 // ── Helpers ───────────────────────────────────────────────────────
 async function getAIText(prompt) {
   const sysPrompt = `You are ARIA, the FIFA WC 2026 stadium OpsCommand AI at ${venueId.toUpperCase()} venue. Be concise, operational, and data-driven.`;
-  if (apiKey) {
+  let responseText;
+  let isSimulated = false;
+
+  // Try backend chat first
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/chat`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        message: prompt,
+        session_id: 'ops-session-123',
+        venue_id: venueId,
+        role: 'ops',
+        context: {}
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      responseText = data.response;
+      if (data.simulated) {
+        isSimulated = true;
+      }
+    }
+  } catch(e) {
+    console.warn('Backend chat failed in ops dashboard, using fallback', e);
+  }
+
+  // Direct client-side Gemini fallback
+  if (!responseText && apiKey) {
     try {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({contents:[{role:'user',parts:[{text:`${sysPrompt}\n\n${prompt}`}]}],generationConfig:{temperature:0.5,maxOutputTokens:400}})
       });
       const d = await r.json();
-      return d?.candidates?.[0]?.content?.parts?.[0]?.text || simulatedOpsResponse(prompt);
-    } catch(e){ return simulatedOpsResponse(prompt); }
+      responseText = d?.candidates?.[0]?.content?.parts?.[0]?.text;
+    } catch(e){ }
   }
-  return simulatedOpsResponse(prompt);
+
+  // Local simulated responses fallback
+  if (!responseText) {
+    responseText = simulatedOpsResponse(prompt);
+    isSimulated = true;
+  }
+
+  if (isSimulated) {
+    responseText = "⚠️ **Gemini Offline (Simulation Fallback)**\n\n" + responseText;
+  }
+
+  return responseText;
 }
 
 function simulatedOpsResponse(q) {
   q = q.toLowerCase();
-  if (q.includes('crowd'))     return '⚡ CROWD STATUS | Risk: HIGH\nField Level 91% — CRITICAL. Gate D 82% — HIGH. Recommend immediate capacity restrictions at Field gates and steward redeployment from South Stand (58%) to Gate D.\nPredicted peak: T+15 minutes.';
-  if (q.includes('transport')) return '🚌 TRANSPORT OPTIMIZATION\n1. IMMEDIATE: Activate 4 additional shuttle routes Zone D\n2. T+10: Open secondary metro platform (add capacity +2,000/hr)\n3. T+15: Staggered exit broadcast — Sections A-C first\n4. Suspend parking Zone A entry now — redirect to Zone D (22% full)';
-  if (q.includes('briefing'))  return '📋 VOLUNTEER SHIFT BRIEFING — 20:45\nCritical zones: Field Level (91%), Gate D (82%)\nOpen incidents: INC-A1F (Medical), INC-B2C (Security), INC-C3D (Crowd)\nPriority tasks: (1) Gate D crowd steward support (2) Post-match transport activation (3) Field Level entry monitoring\nCommunication: Channel 3 for ops updates. Duty Manager: Sarah Chen';
-  if (q.includes('deploy') || q.includes('staff')) return '👮 STAFF REDEPLOYMENT PLAN\nACTION REQUIRED:\n• Pull 3 stewards from South Stand → Gate D\n• Add 2 paramedics to Medical Station 2\n• Assign 4 transport staff to Shuttle Zone C\nTotal redeployed: 9 staff | Timeline: 5 minutes | Approval needed: Duty Manager';
-  return '⚡ OPS COMMAND ACTIVE\nAll systems operational. 6 LangGraph agents monitoring.\nCurrent risk: HIGH at Field Level · MEDIUM at Gate D\nRecommendation: Activate crowd flow protocol NOW and notify duty manager.';
+  if (q.includes('emergency') || q.includes('medical') || q.includes('help') || q.includes('security') || q.includes('injured')) {
+    return `🚨 **EMERGENCY ESCALATION REGISTERED (UNCONFIRMED)**\n` +
+           `• **Immediate Action**: Call 911 directly or press the physical RED SOS button on any stadium column. AEDs are located every 100m.\n` +
+           `• **Escalation Path**: Incident has been logged. Duty Manager is notified.\n` +
+           `⚠️ **Human Supervisor Approval Required**: Staff dispatch, medical team deployment, or area evacuation cannot be executed automatically. A human operator must confirm the dispatch in the Ops Dashboard.`;
+  }
+  if (q.includes('deploy') || q.includes('staff') || q.includes('stewards') || q.includes('flow') || q.includes('capacity')) {
+    return `⚡ **AI OPERATIONS RECOMMENDATIONS (PENDING HUMAN APPROVAL)**\n` +
+           `• **Crowd Management**: Recommendation to redirect flow from Gate D (82% density) to Gate E.\n` +
+           `• **Incident Control**: Recommendation to escalate security response.\n` +
+           `• **Access Control**: Recommendation to restrict entry.\n` +
+           `⚠️ **Human Supervisor Approval Required**: Action pending operator confirmation. Do not redirect crowd flow, dispatch stewards, or restrict entry without explicit human supervisor sign-off.`;
+  }
+  if (q.includes('crowd'))     return '👥 **Crowd Status (Simulated)**\n🟢 Level 2 Concourse: 44% (Low)\n🟡 Gate D: 78% (Medium-High)\n🔴 Field Level: 91% (Critical)\n\n💡 Recommendation: Use Gate E concourse (38% load) for quicker movement.';
+  if (q.includes('transport')) return '🚌 **Transport Options (Simulated)**\n🚇 Metro Line 3: **12 min** wait · 68% load ✅\n🚌 Shuttle Zone C: **6 min** wait · 42% load ✅\n🚗 Parking Zone A: **95%** full ❌ → use Zone D (22% ✅)';
+  if (q.includes('briefing'))  return '📋 **Volunteer Shift Briefing (Simulated)**\nCritical zones: Field Level (91%), Gate D (82%)\nOpen incidents: INC-A1F (Medical), INC-B2C (Security), INC-C3D (Crowd)\nPriority tasks: (1) Gate D crowd steward support (2) Post-match transport activation (3) Field Level entry monitoring';
+  return '⚡ **Ops Command Active (Simulated)**\nAll systems operational. 6 LangGraph agents monitoring.\nCurrent risk: HIGH at Field Level · MEDIUM at Gate D\nRecommendation: Activate crowd flow protocol NOW and notify duty manager.';
 }
 
 // ── Settings ─────────────────────────────────────────────────────
 function openOpsSettings() { document.getElementById('opsApiKeyInput').value=apiKey; document.getElementById('opsSettingsModal').classList.add('open'); }
-function saveOpsKey() { apiKey=document.getElementById('opsApiKeyInput').value.trim(); if(apiKey)localStorage.setItem('stadiumiq_gemini_key',apiKey); updateAIStatus(); document.getElementById('opsSettingsModal').classList.remove('open'); showToast('API key saved — Gemini AI active!','success'); }
+function saveOpsKey() { apiKey=document.getElementById('opsApiKeyInput').value.trim(); if(apiKey)localStorage.setItem('stadiumiq_gemini_key',apiKey); updateAIStatus(); checkSimulationStatus(); document.getElementById('opsSettingsModal').classList.remove('open'); showToast('API key saved — Gemini AI active!','success'); }
 
 function showToast(msg, type='info') {
   const icons={success:'check-circle',warning:'alert-triangle',danger:'alert-circle',info:'info'};
