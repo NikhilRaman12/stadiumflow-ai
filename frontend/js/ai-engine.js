@@ -1,11 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// STADIUMIQ AI ENGINE — Gemini 1.5 Pro Integration
+// STADIUMIQ AI ENGINE — Dynamic Backend Proxy Integration
 // FIFA World Cup 2026
 // ═══════════════════════════════════════════════════════════════
 
 const AIEngine = (() => {
-
-  const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 
   // Stadium Knowledge Base — RAG source for ARIA
   const STADIUM_KB = {
@@ -31,140 +29,73 @@ const AIEngine = (() => {
     ]
   };
 
-  const SYSTEM_PROMPTS = {
-    aria_fan: `You are ARIA, the AI assistant for StadiumIQ at FIFA World Cup 2026.
-You help fans navigate stadiums, find services, get match info, plan their day, and stay safe.
-Be friendly, concise, and always safety-first. Support all 32 languages — respond in the user's language automatically.
-Stadium data: ${JSON.stringify(STADIUM_KB.venues)}.
-Services: ${JSON.stringify(STADIUM_KB.services)}.
-Format responses with emojis for quick scanning. Keep replies under 150 words unless complex routing is needed.
-If crowd density is high in an area, proactively suggest alternatives.`,
-
-    aria_ops: `You are ARIA, the AI operational intelligence assistant for FIFA World Cup 2026 venue staff.
-You provide real-time crowd analysis, incident assessment, staff deployment recommendations, and safety protocols.
-Be precise, data-driven, and use operational language. Prioritize safety and efficiency.
-Stadium data: ${JSON.stringify(STADIUM_KB.venues)}.
-Always include: risk level (LOW/MEDIUM/HIGH/CRITICAL), recommended action, and time-to-act.`,
-
-    aria_volunteer: `You are ARIA, the volunteer support assistant for FIFA World Cup 2026.
-You help volunteers with fan queries, zone assignments, incident reporting, and accessibility support.
-Be clear, actionable, and empathetic. Provide step-by-step guidance when needed.
-Stadium data: ${JSON.stringify(STADIUM_KB.venues)}.
-Services: ${JSON.stringify(STADIUM_KB.services)}.`,
-
-    eco_advisor: `You are the EcoScore sustainability advisor for FIFA World Cup 2026.
-Analyze fan travel and consumption choices. Provide carbon footprint estimates, sustainable alternatives, and eco-friendly venue recommendations.
-Use actual CO2 data: flight per km = 0.255kg CO2/km, car = 0.171kg/km, bus = 0.089kg/km, metro = 0.041kg/km.
-Be encouraging, not preachy. Reward eco choices with points. Keep responses positive and actionable.`,
-
-    itinerary_builder: `You are a personalized matchday itinerary builder for FIFA World Cup 2026.
-Create detailed, time-sequenced matchday plans for fans. Include arrival strategy, pre-match activities, concession timing, transport plans.
-Optimize for: match kick-off time, seat location, accessible needs, food preferences, group size.
-Output as a structured timeline with times and locations.`,
-
-    incident_analyzer: `You are an AI incident analyst for FIFA World Cup 2026 venue operations.
-Analyze incident reports, assess severity (1-5 scale), recommend response protocols, and escalation paths.
-Use FIFA stadium safety protocols. Reference emergency services: Medical (EMS), Security, Fire Safety, Crowd Management, Logistics.
-Always provide: severity score, immediate action, resources needed, estimated resolution time.`,
-  };
-
-  // Call Gemini API
+  // Call Backend proxy instead of direct googleapis.com
   async function generateContent(prompt, systemRole = 'aria_fan', options = {}) {
-    const apiKey = localStorage.getItem('stadiumiq_gemini_key');
-    if (!apiKey) {
-      return { success: false, text: '⚠️ No API key configured. Please add your Gemini API key in Settings to enable AI features.', simulated: true };
-    }
-
-    const systemPrompt = SYSTEM_PROMPTS[systemRole] || SYSTEM_PROMPTS.aria_fan;
-
-    const requestBody = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: `${systemPrompt}\n\n---\nUSER QUERY: ${prompt}` }]
-        }
-      ],
-      generationConfig: {
-        temperature: options.temperature || 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: options.maxTokens || 512,
-        stopSequences: [],
-      },
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      ]
-    };
+    const apiKey = localStorage.getItem('stadiumiq_gemini_key') || '';
+    const backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
+    const BACKEND_URL = backendUrl || window.location.origin;
 
     try {
-      const response = await fetch(`${GEMINI_BASE}?key=${apiKey}`, {
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'X-Gemini-API-Key': apiKey } : {})
+        },
+        body: JSON.stringify({
+          message: prompt,
+          session_id: options.sessionId || 'gen-' + Math.random().toString(36).substr(2, 9),
+          venue_id: options.venueId || 'met',
+          role: systemRole.includes('ops') || systemRole.includes('analyzer') ? 'ops' : 'fan',
+          context: {}
+        })
       });
 
       if (!response.ok) {
-        const err = await response.json();
-        const msg = err?.error?.message || `API error ${response.status}`;
-        if (response.status === 400 && msg.includes('API_KEY')) {
-          return { success: false, text: '🔑 Invalid API key. Please check your Gemini API key in Settings.', simulated: true };
-        }
-        return { success: false, text: `⚠️ AI Error: ${msg}`, simulated: true };
+        return { success: false, text: getDemoResponse(prompt), simulated: true };
       }
 
       const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!text) return { success: false, text: '⚠️ No response from AI. Please try again.', simulated: true };
-
-      return { success: true, text: text.trim(), simulated: false };
-
-    } catch (err) {
-      console.error('Gemini API error:', err);
-      return { success: false, text: `⚠️ Connection error: ${err.message}. Check your internet connection.`, simulated: true };
+      return { success: true, text: data.response, simulated: data.simulated || false };
+    } catch (e) {
+      console.error('generateContent proxy error:', e);
+      return { success: false, text: getDemoResponse(prompt), simulated: true };
     }
   }
 
-  // Multi-turn conversation handler
+  // Multi-turn conversation handler proxied to backend
   async function chat(messages, systemRole = 'aria_fan', options = {}) {
-    const apiKey = localStorage.getItem('stadiumiq_gemini_key');
-    if (!apiKey) {
-      return { success: false, text: getDemoResponse(messages[messages.length-1]?.text || ''), simulated: true };
-    }
+    const apiKey = localStorage.getItem('stadiumiq_gemini_key') || '';
+    const backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
+    const BACKEND_URL = backendUrl || window.location.origin;
 
-    const systemPrompt = SYSTEM_PROMPTS[systemRole] || SYSTEM_PROMPTS.aria_fan;
-
-    const contents = [
-      { role: 'user', parts: [{ text: systemPrompt + '\n\nYou are now starting a conversation. Respond naturally to each message.' }] },
-      { role: 'model', parts: [{ text: 'Understood. I am ARIA, ready to assist fans and staff at FIFA World Cup 2026.' }] },
-      ...messages.map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.text }]
-      }))
-    ];
+    const lastMsg = messages[messages.length - 1]?.text || messages[messages.length - 1]?.content || '';
 
     try {
-      const response = await fetch(`${GEMINI_BASE}?key=${apiKey}`, {
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'X-Gemini-API-Key': apiKey } : {})
+        },
         body: JSON.stringify({
-          contents,
-          generationConfig: { temperature: options.temperature || 0.75, maxOutputTokens: options.maxTokens || 600 },
-        }),
+          message: lastMsg,
+          session_id: options.sessionId || 'chat-' + Math.random().toString(36).substr(2, 9),
+          venue_id: options.venueId || 'met',
+          role: systemRole.includes('ops') ? 'ops' : 'fan',
+          context: {}
+        })
       });
 
       if (!response.ok) {
-        const err = await response.json();
-        return { success: false, text: getDemoResponse(messages[messages.length-1]?.text || ''), simulated: true, error: err?.error?.message };
+        return { success: false, text: getDemoResponse(lastMsg), simulated: true };
       }
 
       const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      return { success: true, text: text?.trim() || '⚠️ Empty response', simulated: false };
-
-    } catch (err) {
-      return { success: false, text: getDemoResponse(messages[messages.length-1]?.text || ''), simulated: true };
+      return { success: true, text: data.response, simulated: data.simulated || false };
+    } catch (e) {
+      console.error('chat proxy error:', e);
+      return { success: false, text: getDemoResponse(lastMsg), simulated: true };
     }
   }
 
@@ -192,32 +123,47 @@ Always provide: severity score, immediate action, resources needed, estimated re
     return `🤖 Hi! I'm ARIA, your FIFA World Cup 2026 AI assistant. I can help with:\n• 🎯 Seat & navigation guidance\n• 🍔 Concession recommendations  \n• ♿ Accessibility routing\n• 🚌 Transport & parking\n• 🌱 EcoScore & sustainability\n• 🚨 Safety & emergency info\n\nAdd your Gemini API key in Settings for full AI-powered responses in 32 languages! What can I help you with?`;
   }
 
-  // Structured AI outputs
+  // Structured AI outputs via backend
   async function analyzeIncident(description, location, severity_hint) {
-    const prompt = `Analyze this stadium incident and provide a JSON response:
-Incident: ${description}
-Location: ${location}
-Initial severity estimate: ${severity_hint}
+    const apiKey = localStorage.getItem('stadiumiq_gemini_key') || '';
+    const backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
+    const BACKEND_URL = backendUrl || window.location.origin;
 
-Respond with ONLY valid JSON in this exact format:
-{
-  "severity": 1-5,
-  "severity_label": "LOW|MEDIUM|HIGH|CRITICAL|EXTREME",
-  "immediate_action": "string",
-  "resources_needed": ["array", "of", "resources"],
-  "estimated_resolution": "time string",
-  "escalate_to": ["departments"],
-  "crowd_impact": "LOW|MEDIUM|HIGH",
-  "evacuation_needed": true/false
-}`;
-    const result = await generateContent(prompt, 'incident_analyzer', { temperature: 0.3, maxTokens: 400 });
-    if (result.success) {
-      try {
-        const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) return { ...result, parsed: JSON.parse(jsonMatch[0]) };
-      } catch (e) { /* fallback */ }
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/incidents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'X-Gemini-API-Key': apiKey } : {})
+        },
+        body: JSON.stringify({
+          description: description,
+          location: location,
+          venue_id: 'met',
+          severity_hint: parseInt(severity_hint) || 3
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, text: JSON.stringify(data.ai_assessment, null, 2), parsed: data.ai_assessment, simulated: false };
+      }
+    } catch (e) {
+      console.error('analyzeIncident proxy error:', e);
     }
-    return { ...result, parsed: { severity: 3, severity_label: 'MEDIUM', immediate_action: 'Assess and monitor', resources_needed: ['Security', 'Medical'], estimated_resolution: '15-20 min', escalate_to: ['Duty Manager'], crowd_impact: 'LOW', evacuation_needed: false } };
+    
+    // simulated fallback
+    const mockAssessment = {
+      severity: parseInt(severity_hint) || 3,
+      severity_label: 'MEDIUM',
+      immediate_action: 'Assess and monitor',
+      resources_needed: ['Security', 'Medical'],
+      estimated_resolution: '15-20 min',
+      escalate_to: ['Duty Manager'],
+      crowd_impact: 'LOW',
+      evacuation_needed: false
+    };
+    return { success: true, text: JSON.stringify(mockAssessment, null, 2), parsed: mockAssessment, simulated: true };
   }
 
   async function buildItinerary(preferences) {
@@ -231,21 +177,41 @@ Food preferences: ${preferences.food || 'no preference'}
 Arriving from: ${preferences.origin}
 
 Create a detailed timeline starting 3 hours before kick-off through post-match departure. Include specific times, locations, and AI tips.`;
-    return generateContent(prompt, 'itinerary_builder', { temperature: 0.8, maxTokens: 700 });
+    return generateContent(prompt, 'itinerary_builder');
   }
 
   async function getEcoAdvice(travelData) {
-    const prompt = `Calculate and advise on carbon footprint for this fan's World Cup journey:
-Travel to stadium: ${travelData.transport} (${travelData.distance}km)
-Origin: ${travelData.origin}
-Food choices today: ${travelData.food}
-Group size: ${travelData.groupSize}
+    const apiKey = localStorage.getItem('stadiumiq_gemini_key') || '';
+    const backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
+    const BACKEND_URL = backendUrl || window.location.origin;
 
-Provide CO2 estimate, comparison to average fan, eco tips, and EcoScore (0-100).`;
-    return generateContent(prompt, 'eco_advisor', { temperature: 0.6, maxTokens: 400 });
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/eco/score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'X-Gemini-API-Key': apiKey } : {})
+        },
+        body: JSON.stringify({
+          venue_id: 'met',
+          travel_mode: travelData.transport || 'metro',
+          travel_distance: parseFloat(travelData.distance) || 25.0,
+          group_size: parseInt(travelData.groupSize) || 1,
+          food_choices: travelData.food ? [travelData.food] : ['local_food']
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, text: data.advice, simulated: false, data: data };
+      }
+    } catch (e) {
+      console.error('getEcoAdvice proxy error:', e);
+    }
+    return { success: false, text: getDemoResponse('eco'), simulated: true };
   }
 
-  return { generateContent, chat, analyzeIncident, buildItinerary, getEcoAdvice, getDemoResponse, STADIUM_KB, SYSTEM_PROMPTS };
+  return { generateContent, chat, analyzeIncident, buildItinerary, getEcoAdvice, getDemoResponse, STADIUM_KB };
 })();
 
 // Export globally

@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging, random
 from typing import Annotated, TypedDict
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from .base_agent import get_llm, memory, simulate_response
@@ -52,7 +53,7 @@ class TransportOptimizerGraph:
         g.add_node("fetch_transport_state", self._fetch_transport)
         g.add_node("fetch_graph_context",   self._fetch_graph_context)
         g.add_node("analyze_loads",         self._analyze_loads)
-        g.add_node("generate_plan",         self._generate_plan)
+        g.add_node("generate_plan",         self._generate_response)
 
         g.set_entry_point("fetch_transport_state")
         g.add_edge("fetch_transport_state", "fetch_graph_context")
@@ -95,14 +96,17 @@ class TransportOptimizerGraph:
             routes.append({"action": "increase_metro_frequency", "lines": ["Line 2"], "priority": "HIGH"})
         return {"optimized_routes": routes}
 
-    async def _generate_plan(self, state: TransportAgentState) -> dict:
-        query   = state.get("user_query","Transport status")
+    async def _generate_response(self, state: TransportAgentState, config: RunnableConfig = None) -> dict:
+        query   = state.get("user_query", "Transport optimization")
         ctx     = state.get("graph_context","")
         ts      = state.get("transport_state",{})
         phase   = state.get("match_phase","pre_match")
         routes  = state.get("optimized_routes",[])
 
-        if self.llm is None:
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        llm = get_llm(temperature=0.4, max_tokens=600, api_key=api_key) if api_key else self.llm
+
+        if llm is None:
             p = ts.get("parking",{})
             m = ts.get("metro",{})
             s = ts.get("shuttle",{})
@@ -117,7 +121,7 @@ class TransportOptimizerGraph:
             system_msg = SystemMessage(content=TRANSPORT_SYSTEM_PROMPT.format(
                 graph_context=ctx[:1200], transport_state=ts_text, match_phase=phase
             ))
-            result = await self.llm.ainvoke([system_msg, HumanMessage(content=query)])
+            result = await llm.ainvoke([system_msg, HumanMessage(content=query)])
             resp = result.content
             return {"response": resp, "messages": [AIMessage(content=resp)]}
         except Exception as e:

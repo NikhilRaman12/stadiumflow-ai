@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging, random, math
 from typing import Annotated, TypedDict
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from .base_agent import get_llm, memory, simulate_response
@@ -100,14 +101,17 @@ class CrowdIntelligenceGraph:
         ]
         return {"bottlenecks": bottlenecks}
 
-    async def _generate_response(self, state: CrowdAgentState) -> dict:
+    async def _generate_response(self, state: CrowdAgentState, config: RunnableConfig = None) -> dict:
         query      = state.get("user_query", "Crowd analysis")
         ctx        = state.get("graph_context", "")
         crowd      = state.get("crowd_data", {})
         risk       = state.get("risk_level", "LOW")
         bns        = state.get("bottlenecks", [])
 
-        if self.llm is None:
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        llm = get_llm(temperature=0.4, max_tokens=600, api_key=api_key) if api_key else self.llm
+
+        if llm is None:
             resp = (f"⚡ CROWD ANALYSIS | Risk: {risk}\n"
                     f"Bottlenecks detected: {len(bns)} zones\n"
                     + "\n".join(f"• {b['zone'].upper()}: {b['density']}% - redirect to {b['recommended_gate']}" for b in bns[:3])
@@ -119,7 +123,7 @@ class CrowdIntelligenceGraph:
                 graph_context=ctx[:1500],
                 crowd_data=crowd_summary
             ))
-            result = await self.llm.ainvoke([system_msg, HumanMessage(content=query)])
+            result = await llm.ainvoke([system_msg, HumanMessage(content=query)])
             resp = result.content
             return {"response": resp, "messages": [AIMessage(content=resp)]}
         except Exception as e:

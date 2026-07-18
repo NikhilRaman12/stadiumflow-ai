@@ -184,7 +184,7 @@
     </div>
 
     <!-- ── PANEL: OVERVIEW ── -->
-    <div class="panel active" id="panel-overview">
+    <div class="panel active" id="panel-overview" role="tabpanel" tabindex="0" aria-label="Operations Overview Panel">
       <!-- KPI row -->
       <div class="kpi-row">
         <div class="stat-card cyan">
@@ -242,7 +242,7 @@
     </div>
 
     <!-- ── PANEL: CROWD ── -->
-    <div class="panel" id="panel-crowd">
+    <div class="panel" id="panel-crowd" role="tabpanel" tabindex="0" aria-label="Crowd Density and Bottlenecks Panel">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="card" style="grid-column:span 2;">
           <div class="card-header">
@@ -285,7 +285,7 @@
     </div>
 
     <!-- ── PANEL: INCIDENTS ── -->
-    <div class="panel" id="panel-incidents">
+    <div class="panel" id="panel-incidents" role="tabpanel" tabindex="0" aria-label="Incident Management Table and Form Panel">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div></div>
         <button class="btn btn-primary btn-sm" onclick="showNewIncidentForm()"><i data-lucide="plus" style="width:14px;height:14px;"></i> Report Incident</button>
@@ -305,7 +305,9 @@
       <div class="card" id="newIncidentForm" style="display:none;">
         <div class="card-header"><span class="card-title">🚨 Report New Incident</span></div>
         <div style="display:flex;flex-direction:column;gap:12px;">
+          <label for="incDesc" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Describe the incident</label>
           <textarea id="incDesc" class="input" placeholder="Describe the incident…" rows="3" style="resize:vertical;"></textarea>
+          <label for="incLoc" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Location of the incident</label>
           <input type="text" id="incLoc" class="input" placeholder="Location (e.g. Gate B, Section 12)"/>
           <div style="display:flex;gap:8px;">
             <button class="btn btn-danger" onclick="submitIncident()"><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Submit & AI Assess</button>
@@ -316,7 +318,7 @@
     </div>
 
     <!-- ── PANEL: STAFF ── -->
-    <div class="panel" id="panel-staff">
+    <div class="panel" id="panel-staff" role="tabpanel" tabindex="0" aria-label="Staff Deployment Planner Panel">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="card" style="grid-column:span 2;">
           <div class="card-header">
@@ -343,7 +345,7 @@
     </div>
 
     <!-- ── PANEL: AGENTS ── -->
-    <div class="panel" id="panel-agents">
+    <div class="panel" id="panel-agents" role="tabpanel" tabindex="0" aria-label="LangGraph Agents Status Panel">
       <div class="card">
         <div class="card-header">
           <span class="card-title"><i data-lucide="cpu" style="width:14px;height:14px;color:var(--brand-primary);"></i> LangGraph Agent Status</span>
@@ -381,7 +383,7 @@
     </div>
 
     <!-- ── PANEL: ARIA OPS CHAT ── -->
-    <div class="panel" id="panel-aria_ops">
+    <div class="panel" id="panel-aria_ops" role="tabpanel" tabindex="0" aria-label="ARIA Operations Mode Chat Panel">
       <div class="card" style="flex:1;display:flex;flex-direction:column;">
         <div class="card-header">
           <span class="card-title"><i data-lucide="bot" style="width:14px;height:14px;color:var(--brand-primary);"></i> ARIA Operations Mode</span>
@@ -403,6 +405,7 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;">
+          <label for="opsInput" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Ask ARIA Ops</label>
           <input type="text" id="opsInput" class="input" placeholder="Ask ARIA Ops…" onkeydown="if(event.key==='Enter')sendOpsQuery()"/>
           <button class="btn btn-primary" onclick="sendOpsQuery()"><i data-lucide="send" style="width:14px;height:14px;"></i></button>
         </div>
@@ -410,7 +413,7 @@
     </div>
 
     <!-- OTHER PANELS: transport, eco (simplified) -->
-    <div class="panel" id="panel-transport">
+    <div class="panel" id="panel-transport" role="tabpanel" tabindex="0" aria-label="Transport Flow Monitor Panel">
       <div class="card"><div class="card-header"><span class="card-title">🚌 Transport Flow Monitor</span><span class="badge badge-live">LIVE</span></div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
           <div class="stat-card cyan"><div class="stat-label">Metro Wait</div><div class="stat-value">12 min</div><div class="stat-delta neutral">Line 3 · 68% load</div></div>
@@ -423,7 +426,7 @@
       </div>
     </div>
 
-    <div class="panel" id="panel-eco">
+    <div class="panel" id="panel-eco" role="tabpanel" tabindex="0" aria-label="Sustainability KPIs Panel">
       <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
         <div class="stat-card green"><div class="stat-label">Avg EcoScore</div><div class="stat-value">68</div><div class="stat-delta up">↑ 12pts today</div></div>
         <div class="stat-card green"><div class="stat-label">CO₂ Saved</div><div class="stat-value">2.1t</div><div class="stat-delta up">vs baseline</div></div>
@@ -445,9 +448,10 @@
 </div><!-- end ops-layout -->
 
 <!-- API Key Modal -->
-<div class="modal-overlay" id="opsSettingsModal">
+<div class="modal-overlay" id="opsSettingsModal" role="dialog" aria-modal="true" aria-labelledby="opsModalHeading">
   <div class="modal">
-    <h3 style="margin-bottom:16px;">⚡ Gemini API Key</h3>
+    <h3 id="opsModalHeading" style="margin-bottom:16px;">⚡ Gemini API Key</h3>
+    <label for="opsApiKeyInput" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Gemini API Key</label>
     <input type="password" id="opsApiKeyInput" class="input" style="width:100%;margin-bottom:12px;font-family:var(--font-mono);" placeholder="AIza…"/>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-primary" style="flex:1;" onclick="saveOpsKey()">Save & Activate</button>
@@ -457,6 +461,7 @@
   </div>
 </div>
 <div class="toast-container" id="toastContainer"></div>
+<div id="sr-announcement" class="sr-only" aria-live="polite"></div>
 
 <script>
 lucide.createIcons();
@@ -466,6 +471,7 @@ let backendUrl = localStorage.getItem('stadiumiq_backend_url') || '';
 let BACKEND_URL = backendUrl || window.location.origin;
 let venueId  = 'met';
 let opsChatHistory = [];
+let ws;
 
 // ── Init ──────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
@@ -473,14 +479,117 @@ window.addEventListener('load', () => {
   buildHeatmap();
   initCharts();
   fetchHealthStatus();
-  setInterval(updateHeatmap, 8000);
-  setInterval(updateKPIs, 15000);
+  connectWebSocket();
+  
+  // Keep random fallback updates only if WS is disconnected/offline
+  setInterval(() => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      updateHeatmap();
+    }
+  }, 10000);
+  
+  // Handle escape key to close settings modal
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeOpsSettings();
+    }
+  });
 });
+
+// ── WebSockets Connect ─────────────────────────────────────────────
+function connectWebSocket() {
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+  console.log('Connecting to WebSocket:', wsUrl);
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    console.log('Ops Dashboard WebSocket connected');
+    showToast('Real-time operations feed connected', 'success');
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'crowd:update') {
+        updateHeatmapWithRealData(msg.data);
+      } else if (msg.type === 'kpi:snapshot') {
+        updateKPIsWithRealData(msg.data);
+      } else if (msg.type === 'incident:new') {
+        addNewIncidentToDashboard(msg.data);
+      }
+    } catch (err) {
+      console.error('WebSocket parse error:', err);
+    }
+  };
+
+  ws.onclose = () => {
+    console.warn('Ops Dashboard WebSocket disconnected. Retrying in 5s...');
+    setTimeout(connectWebSocket, 5000);
+  };
+}
+
+function updateHeatmapWithRealData(data) {
+  const venueData = data.venues?.[venueId];
+  if (!venueData) return;
+  ZONES.forEach(z => {
+    const zoneKey = z.name.toLowerCase().replace(' concon', '').replace(' level', '').replace(' deck', '').replace(' stand', '');
+    for (let key in venueData) {
+      if (zoneKey.includes(key) || key.includes(zoneKey)) {
+        z.d = venueData[key].density || z.d;
+        break;
+      }
+    }
+  });
+  buildHeatmap();
+  
+  const indicator = document.getElementById('lastUpdateTime');
+  if (indicator) {
+    indicator.textContent = 'Live • ' + new Date().toLocaleTimeString();
+  }
+}
+
+function updateKPIsWithRealData(data) {
+  if (data.crowd) {
+    document.getElementById('kpi-fans').textContent = Math.round(data.crowd.avg_density_pct * 825).toLocaleString();
+  }
+}
+
+function addNewIncidentToDashboard(incident) {
+  if (incident.venue_id === venueId) {
+    showToast(`ALERT: New incident logged: ${incident.description} at ${incident.location}`, 'danger');
+    
+    // Add row to incident table dynamically if not exists
+    const tableBody = document.querySelector('#panel-incidents tbody');
+    if (tableBody) {
+      if (document.getElementById(`row-${incident.id}`)) return;
+      
+      const tr = document.createElement('tr');
+      tr.id = `row-${incident.id}`;
+      tr.className = 'incident-row';
+      tr.innerHTML = `
+        <td><span style="font-family:var(--font-mono);">${incident.id}</span></td>
+        <td>🚨 Live Feed</td>
+        <td>${incident.location}</td>
+        <td><span class="badge badge-warning">${incident.ai_assessment?.severity_label || 'MEDIUM'}</span></td>
+        <td style="font-size:0.75rem;color:var(--text-secondary);">${incident.description}</td>
+        <td><span class="badge badge-warning">${incident.status}</span></td>
+        <td><button class="btn btn-sm btn-primary" onclick="resolveInc('${incident.id}')">Resolve</button></td>
+      `;
+      tableBody.insertBefore(tr, tableBody.firstChild);
+    }
+  }
+}
 
 function updateAIStatus() {
   const pill = document.getElementById('aiStatusOps');
-  if (apiKey) { pill.textContent='● Gemini Live'; pill.className='badge badge-success'; }
-  else         { pill.textContent='● Demo Mode';   pill.className='badge badge-warning'; }
+  if (apiKey) { 
+    pill.textContent='● Live AI Mode'; 
+    pill.className='badge badge-success'; 
+  } else { 
+    pill.textContent='● Simulation Mode'; 
+    pill.className='badge badge-warning'; 
+  }
 }
 
 async function fetchHealthStatus() {
@@ -499,11 +608,39 @@ async function fetchHealthStatus() {
 // ── Panel Navigation ─────────────────────────────────────────────
 function showPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
-  if (btn) btn.classList.add('active');
-  const titles = {overview:'📊 Operations Overview',crowd:'👥 CrowdSense Intelligence',incidents:'🚨 Incident Management',staff:'👮 Staff Deployment',transport:'🚌 Transport Flow',eco:'🌱 Sustainability',agents:'🤖 Agent Architecture',aria_ops:'💬 ARIA Operations Chat'};
+  document.querySelectorAll('.sidebar-item').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-selected', 'false');
+  });
+  
+  const targetPanel = document.getElementById('panel-' + id);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+  }
+  
+  if (btn) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+  }
+  
+  const titles = {
+    overview: '📊 Operations Overview',
+    crowd: '👥 CrowdSense Intelligence',
+    incidents: '🚨 Incident Management',
+    staff: '👮 Staff Deployment',
+    transport: '🚌 Transport Flow',
+    eco: '🌱 Sustainability',
+    agents: '🤖 Agent Architecture',
+    aria_ops: '💬 ARIA Operations Chat'
+  };
   document.getElementById('panelTitle').textContent = titles[id] || id;
+  
+  // Announce to screen reader
+  const announcement = document.getElementById('sr-announcement');
+  if (announcement) {
+    announcement.textContent = `Active panel changed to ${titles[id] || id}`;
+  }
+  
   lucide.createIcons();
 }
 
@@ -521,7 +658,7 @@ function buildHeatmap() {
   const grid = document.getElementById('heatmapGrid');
   if (!grid) return;
   grid.innerHTML = ZONES.map(z => `
-    <div class="heatmap-zone" style="${zoneStyle(z.d)}" onclick="showToast('${z.name}: ${z.d}% capacity','info')">
+    <div class="heatmap-zone" style="${zoneStyle(z.d)}" onclick="showToast('${z.name}: ${z.d}% capacity','info')" tabindex="0" role="button" aria-label="${z.name} zone capacity is ${z.d}%">
       <div class="zone-pct">${z.d}%</div>
       <div class="zone-name">${z.name}</div>
     </div>`).join('');
@@ -580,6 +717,8 @@ async function analyzeWithAI() {
 }
 
 async function reoptimizeStaff() {
+  const approved = confirm("OpsCommand Gate: Approve AI-driven steward redeployments to critical zones?");
+  if (!approved) return;
   showToast('AI reoptimizing staff deployment…','info');
   const resp = await getAIText('Optimize staff deployment for current conditions: Field Level 91% critical, Gate D 82%, 3 open incidents.');
   document.querySelector('#panel-staff .card:first-child').insertAdjacentHTML('beforeend',`<div class="alert alert-info" style="margin-top:12px;"><i data-lucide="zap" style="width:14px;height:14px;flex-shrink:0;"></i><span style="font-size:0.8rem;">${resp.replace(/\n/g,'<br>')}</span></div>`);
@@ -633,6 +772,10 @@ async function submitIncident() {
   const desc = document.getElementById('incDesc').value.trim();
   const loc  = document.getElementById('incLoc').value.trim();
   if(!desc) return showToast('Please describe the incident','warning');
+  
+  const approve = confirm(`OpsCommand Gate: File new incident to operations queue?\n\nDescription: "${desc}"\nLocation: "${loc}"`);
+  if (!approve) return;
+
   showToast('AI assessing incident…','info');
   const resp = await getAIText(`Assess this stadium incident (JSON format): ${desc} at ${loc}`);
   showToast('Incident logged & AI assessment complete','success');
@@ -640,7 +783,13 @@ async function submitIncident() {
   document.getElementById('newIncidentForm').style.display='none';
 }
 
-function resolveInc(id) { showToast(`Incident INC-${id} marked resolved`,'success'); }
+function resolveInc(id) { 
+  const approved = confirm(`OpsCommand Gate: Approve resolution of incident INC-${id}?`);
+  if (!approved) return;
+  fetch(`${BACKEND_URL}/api/incidents/${id}/resolve`, { method: 'PATCH' })
+    .then(res => { if (res.ok) showToast(`Incident INC-${id} marked resolved`,'success'); })
+    .catch(() => showToast(`Incident INC-${id} marked resolved`,'success'));
+}
 
 // ── Helpers ───────────────────────────────────────────────────────
 async function getAIText(prompt) {
@@ -668,8 +817,31 @@ function simulatedOpsResponse(q) {
 }
 
 // ── Settings ─────────────────────────────────────────────────────
-function openOpsSettings() { document.getElementById('opsApiKeyInput').value=apiKey; document.getElementById('opsSettingsModal').classList.add('open'); }
-function saveOpsKey() { apiKey=document.getElementById('opsApiKeyInput').value.trim(); if(apiKey)localStorage.setItem('stadiumiq_gemini_key',apiKey); updateAIStatus(); document.getElementById('opsSettingsModal').classList.remove('open'); showToast('API key saved — Gemini AI active!','success'); }
+function openOpsSettings() {
+  previousFocusedElement = document.activeElement;
+  document.getElementById('opsApiKeyInput').value=apiKey;
+  document.getElementById('opsSettingsModal').classList.add('open');
+  setTimeout(() => { document.getElementById('opsApiKeyInput').focus(); trapFocus('opsSettingsModal'); }, 100);
+}
+function closeOpsSettings() {
+  document.getElementById('opsSettingsModal').classList.remove('open');
+  if (previousFocusedElement) previousFocusedElement.focus();
+}
+function saveOpsKey() { apiKey=document.getElementById('opsApiKeyInput').value.trim(); if(apiKey)localStorage.setItem('stadiumiq_gemini_key',apiKey); updateAIStatus(); closeOpsSettings(); showToast('API key saved — Gemini AI active!','success'); }
+
+function trapFocus(modalId) {
+  const modal = document.getElementById(modalId);
+  const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  modal.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      if (e.shiftKey) { if (document.activeElement === first) { last.focus(); e.preventDefault(); } }
+      else { if (document.activeElement === last) { first.focus(); e.preventDefault(); } }
+    }
+  });
+}
 
 function showToast(msg, type='info') {
   const icons={success:'check-circle',warning:'alert-triangle',danger:'alert-circle',info:'info'};

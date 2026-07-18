@@ -25,6 +25,7 @@ import logging
 from typing import Annotated, TypedDict, Literal, Any
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 
@@ -100,12 +101,15 @@ class FanAssistantGraph:
         intent = classify_intent(state["user_query"])
         return {"intent": intent}
 
-    async def _generate_response(self, state: FanAgentState) -> dict:
+    async def _generate_response(self, state: FanAgentState, config: RunnableConfig = None) -> dict:
         intent  = state.get("intent", "general")
         context = state.get("graph_context", "")
         query   = state["user_query"]
 
-        if self.llm is None:
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        llm = get_llm(temperature=0.75, max_tokens=512, api_key=api_key) if api_key else self.llm
+
+        if llm is None:
             resp = await simulate_response(intent, query, context)
             return {"response": resp, "messages": [AIMessage(content=resp)]}
 
@@ -118,7 +122,7 @@ class FanAssistantGraph:
             # Include conversation history (last 6 messages)
             history = state.get("messages", [])[-6:]
             all_msgs = [system_msg] + history + [HumanMessage(content=query)]
-            result = await self.llm.ainvoke(all_msgs)
+            result = await llm.ainvoke(all_msgs)
             resp = result.content
             return {"response": resp, "messages": [AIMessage(content=resp)]}
         except Exception as e:

@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 from typing import Annotated, TypedDict, Literal
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from .base_agent import get_llm, memory, classify_intent, simulate_response
@@ -83,11 +84,14 @@ class OpsCommandGraph:
         except Exception:
             return {"graph_context": "Ops context unavailable."}
 
-    async def _gather_reports(self, state: OpsAgentState) -> dict:
+    async def _gather_reports(self, state: OpsAgentState, config: RunnableConfig = None) -> dict:
         """Call sub-agents via A2A-like in-process invocation for rapid synthesis."""
         reports = {}
         venue_id = state.get("venue_id","met")
-        config = {"configurable": {"thread_id": f"ops_{state.get('session_id','default')}"}}
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        sub_config = {"configurable": {"thread_id": f"ops_{state.get('session_id','default')}"}}
+        if api_key:
+            sub_config["configurable"]["api_key"] = api_key
 
         # Call crowd agent
         if "crowd" in self.sub_graphs:
@@ -96,7 +100,7 @@ class OpsCommandGraph:
                     {"user_query": "Current crowd status", "venue_id": venue_id,
                      "messages": [], "crowd_data": {}, "density_scores": {},
                      "bottlenecks": [], "recommendations": [], "risk_level": "LOW", "response": ""},
-                    config=config
+                    config=sub_config
                 )
                 reports["crowd"] = result.get("response","No crowd data")[:300]
             except Exception as e:
@@ -109,7 +113,7 @@ class OpsCommandGraph:
                     {"user_query": "Current transport status", "venue_id": venue_id,
                      "match_phase": "pre_match", "messages": [], "transport_state": {},
                      "optimized_routes": [], "response": ""},
-                    config=config
+                    config=sub_config
                 )
                 reports["transport"] = result.get("response","No transport data")[:300]
             except Exception as e:
@@ -132,14 +136,17 @@ class OpsCommandGraph:
             staff_plan[0]["priority"]    = "CRITICAL"
         return {"staff_plan": staff_plan, "ops_metrics": {"total_staff_deployed": sum(s["staff_count"] for s in staff_plan)}}
 
-    async def _synthesize(self, state: OpsAgentState) -> dict:
+    async def _synthesize(self, state: OpsAgentState, config: RunnableConfig = None) -> dict:
         query   = state.get("user_query","Ops status")
         ctx     = state.get("graph_context","")
         reports = state.get("agent_reports",{})
         metrics = state.get("ops_metrics",{})
         staff   = state.get("staff_plan",[])
 
-        if self.llm is None:
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        llm = get_llm(temperature=0.4, max_tokens=800, api_key=api_key) if api_key else self.llm
+
+        if llm is None:
             resp = (f"🏟️ OPS COMMAND REPORT\n"
                     f"Total staff deployed: {metrics.get('total_staff_deployed','?')}\n"
                     + "\n".join(f"• [{s['priority']}] {s['zone']}: {s['staff_count']} {s['role']}" for s in staff[:4])
@@ -152,7 +159,7 @@ class OpsCommandGraph:
                 graph_context=ctx[:1200], agent_reports=reports_text,
                 ops_metrics=str(metrics)
             ))
-            result = await self.llm.ainvoke([system_msg, HumanMessage(content=query)])
+            result = await llm.ainvoke([system_msg, HumanMessage(content=query)])
             return {"response": result.content, "messages": [AIMessage(content=result.content)]}
         except Exception as e:
             log.error("OpsCommand LLM error: %s", e)

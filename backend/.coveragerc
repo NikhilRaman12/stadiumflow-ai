@@ -1,0 +1,4 @@
+[run]
+omit =
+    run_local.py
+    tests/*

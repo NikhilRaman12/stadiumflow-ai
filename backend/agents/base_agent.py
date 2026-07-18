@@ -19,9 +19,9 @@ from langgraph.checkpoint.memory import MemorySaver
 log = logging.getLogger("stadiumiq.agents")
 
 
-def get_llm(temperature: float = 0.7, max_tokens: int = 1024) -> ChatGoogleGenerativeAI | None:
+def get_llm(temperature: float = 0.7, max_tokens: int = 1024, api_key: str | None = None) -> ChatGoogleGenerativeAI | None:
     """Return a configured Gemini 1.5 Pro LLM, or None if no API key."""
-    key = os.getenv("GEMINI_API_KEY")
+    key = api_key or os.getenv("GEMINI_API_KEY")
     if not key:
         log.warning("GEMINI_API_KEY not set - agents in simulation mode")
         return None
@@ -102,6 +102,6 @@ SIMULATED_RESPONSES = {
 async def simulate_response(intent: str, query: str, context: str = "") -> str:
     """Return a realistic simulated response when LLM is unavailable."""
     base = SIMULATED_RESPONSES.get(intent, SIMULATED_RESPONSES["general"])
-    if context and len(context) > 50:
+    if context:
         return f"{base}\n\n📚 Graph context: {context[:200]}…"
     return base

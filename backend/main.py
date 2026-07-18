@@ -38,6 +38,8 @@ from pydantic import BaseModel
 
 from dotenv import load_dotenv
 
+from middleware.security import SecurityHeadersMiddleware, RateLimitMiddleware
+
 
 
 load_dotenv()
@@ -289,23 +291,41 @@ app = FastAPI(
 # ── Middleware ────────────────────────────────────────────────────────
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["testserver", "localhost", "127.0.0.1", "*.onrender.com", "*.trycloudflare.com", "*.ngrok-free.app"])
+
+# Configure CORS dynamically to support credentials correctly without wildcard issues
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_env and allowed_origins_env != "*":
+    origins = allowed_origins_env.split(",")
+else:
+    origins = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:3000",
+        "https://nikhilraman12.github.io"
+    ]
 app.add_middleware(CORSMiddleware,
-
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
-
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
-
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+# Custom security and rate limiting middlewares
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 
 
 
 # ── Static Frontend ───────────────────────────────────────────────────
-
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
-
 if os.path.exists(frontend_path):
-
     app.mount("/app", StaticFiles(directory=frontend_path, html=True), name="frontend")
+    if os.path.exists(os.path.join(frontend_path, "css")):
+        app.mount("/css", StaticFiles(directory=os.path.join(frontend_path, "css")), name="css")
+    if os.path.exists(os.path.join(frontend_path, "js")):
+        app.mount("/js", StaticFiles(directory=os.path.join(frontend_path, "js")), name="js")
+    if os.path.exists(os.path.join(frontend_path, "assets")):
+        app.mount("/assets", StaticFiles(directory=os.path.join(frontend_path, "assets")), name="assets")
 
 
 
@@ -388,16 +408,25 @@ async def health(request: Request):
 
 
 @app.get("/")
-
 async def root():
-
     index = os.path.join(frontend_path, "index.html")
-
     if os.path.exists(index):
-
         return FileResponse(index)
-
     return {"message": "StadiumIQ API - visit /api/docs"}
+
+@app.get("/fan")
+async def fan_app():
+    f = os.path.join(frontend_path, "fan-app.html")
+    if os.path.exists(f):
+        return FileResponse(f)
+    return JSONResponse(status_code=404, content={"error": "fan-app.html not found"})
+
+@app.get("/ops")
+async def ops_dash():
+    f = os.path.join(frontend_path, "ops-dashboard.html")
+    if os.path.exists(f):
+        return FileResponse(f)
+    return JSONResponse(status_code=404, content={"error": "ops-dashboard.html not found"})
 
 
 

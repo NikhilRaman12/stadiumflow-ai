@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 from typing import Annotated, TypedDict
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from .base_agent import get_llm, memory, simulate_response
@@ -119,7 +120,7 @@ class EcoScoringGraph:
 
         return {"co2_kg": round(total_co2, 2), "eco_score": eco_score, "eco_points": eco_points, "recommendations": recs}
 
-    async def _generate_advice(self, state: EcoAgentState) -> dict:
+    async def _generate_advice(self, state: EcoAgentState, config: RunnableConfig = None) -> dict:
         query  = state.get("user_query","Eco advice")
         ctx    = state.get("graph_context","")
         co2    = state.get("co2_kg",0)
@@ -129,7 +130,10 @@ class EcoScoringGraph:
         mode   = state.get("travel_mode","metro")
         dist   = state.get("travel_distance",25)
 
-        if self.llm is None:
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        llm = get_llm(temperature=0.6, max_tokens=400, api_key=api_key) if api_key else self.llm
+
+        if llm is None:
             resp = (f"🌱 ECOSCORE REPORT\n"
                     f"Carbon footprint: {co2:.1f}kg CO₂\n"
                     f"EcoScore: {score}/100 | EcoPoints earned: {points}⭐\n"
@@ -141,7 +145,7 @@ class EcoScoringGraph:
             system_msg = SystemMessage(content=ECO_SYSTEM_PROMPT.format(
                 graph_context=ctx[:1000], eco_profile=eco_profile
             ))
-            result = await self.llm.ainvoke([system_msg, HumanMessage(content=query)])
+            result = await llm.ainvoke([system_msg, HumanMessage(content=query)])
             return {"response": result.content, "messages": [AIMessage(content=result.content)]}
         except Exception as e:
             log.error("Eco agent LLM error: %s", e)

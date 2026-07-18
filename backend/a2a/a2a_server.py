@@ -151,7 +151,10 @@ async def _invoke_agent(request: Request, graph_attr: str, task: A2ATask,
             metadata={"error": "graph_not_ready"}
         )
     try:
+        x_gemini_api_key = request.headers.get("x-gemini-api-key")
         config = {"configurable": {"thread_id": task.session_id}}
+        if x_gemini_api_key:
+            config["configurable"]["api_key"] = x_gemini_api_key
         result = await graph.ainvoke(state, config=config)
         response_text = result.get("response", "No response generated")
         meta = {k: v for k, v in result.items() if k not in ("messages","response") and not callable(v)}

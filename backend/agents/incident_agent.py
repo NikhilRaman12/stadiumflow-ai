@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging, json
 from typing import Annotated, TypedDict
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from .base_agent import get_llm, memory
@@ -113,14 +114,17 @@ class IncidentResponseGraph:
             base = min(5, base + 1)
         return {"severity_estimate": base}
 
-    async def _generate_protocol(self, state: IncidentAgentState) -> dict:
+    async def _generate_protocol(self, state: IncidentAgentState, config: RunnableConfig = None) -> dict:
         ctx   = state.get("graph_context","")
         desc  = state.get("incident_description","")
         itype = state.get("incident_type","other")
         sev   = state.get("severity_estimate",3)
         loc   = state.get("location","Unknown")
 
-        if self.llm is None:
+        api_key = config.configurable.get("api_key") if config and hasattr(config, "configurable") and config.configurable else None
+        llm = get_llm(temperature=0.3, max_tokens=400, api_key=api_key) if api_key else self.llm
+
+        if llm is None:
             parsed = {
                 "severity": sev, "severity_label": ["","LOW","LOW","MEDIUM","HIGH","CRITICAL"][sev],
                 "incident_type": itype, "immediate_action": "Dispatch nearest response team",
@@ -137,14 +141,25 @@ class IncidentResponseGraph:
             prompt = (f"Incident: {desc}\nLocation: {loc}\n"
                       f"Type: {itype} | Initial severity estimate: {sev}/5")
             system_msg = SystemMessage(content=INCIDENT_SYSTEM_PROMPT.format(graph_context=ctx[:1500]))
-            result = await self.llm.ainvoke([system_msg, HumanMessage(content=prompt)])
+            result = await llm.ainvoke([system_msg, HumanMessage(content=prompt)])
             text = result.content
             try:
                 m = __import__("re").search(r'\{[\s\S]*\}', text)
                 parsed = json.loads(m.group()) if m else {}
             except Exception:
                 parsed = {}
+            if not isinstance(parsed, dict) or "severity" not in parsed:
+                parsed = {
+                    "severity": sev, "severity_label": ["","LOW","LOW","MEDIUM","HIGH","CRITICAL"][sev],
+                    "incident_type": itype, "immediate_action": "Dispatch nearest response team",
+                    "resources_needed": ["Medical","Security"]
+                }
             return {"parsed_response": parsed, "response": text, "messages": [AIMessage(content=text)]}
         except Exception as e:
             log.error("Incident agent LLM error: %s", e)
-            return {"parsed_response": {}, "response": "Incident protocol generation failed. Follow manual protocols.", "messages": []}
+            parsed_fallback = {
+                "severity": sev, "severity_label": ["","LOW","LOW","MEDIUM","HIGH","CRITICAL"][sev],
+                "incident_type": itype, "immediate_action": "Dispatch nearest response team",
+                "resources_needed": ["Medical","Security"]
+            }
+            return {"parsed_response": parsed_fallback, "response": "Incident protocol generation failed. Follow manual protocols.", "messages": []}

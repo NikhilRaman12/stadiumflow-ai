@@ -3,14 +3,17 @@ Crowd API - /api/crowd
 =======================
 Real-time crowd data and AI analysis endpoints.
 """
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Header, HTTPException
 from pydantic import BaseModel
+from typing import Optional, Literal
 import random, uuid
 
 router = APIRouter()
 
 @router.get("/{venue_id}")
 async def get_crowd(venue_id: str, request: Request):
+    if venue_id not in ("met", "dal", "la", "atz", "bc", "sf"):
+        raise HTTPException(status_code=400, detail="Unsupported venue ID")
     sim = getattr(request.app.state, "crowd_sim", None)
     if sim:
         return sim.get_venue_state(venue_id)
@@ -24,6 +27,8 @@ async def get_crowd(venue_id: str, request: Request):
 
 @router.get("/{venue_id}/predictions")
 async def get_predictions(venue_id: str, minutes_ahead: int = 45):
+    if venue_id not in ("met", "dal", "la", "atz", "bc", "sf"):
+        raise HTTPException(status_code=400, detail="Unsupported venue ID")
     return {
         "venue_id": venue_id, "minutes_ahead": minutes_ahead,
         "predictions": [
@@ -34,7 +39,9 @@ async def get_predictions(venue_id: str, minutes_ahead: int = 45):
     }
 
 @router.post("/{venue_id}/analyze")
-async def analyze_crowd(venue_id: str, request: Request):
+async def analyze_crowd(venue_id: str, request: Request, x_gemini_api_key: Optional[str] = Header(None)):
+    if venue_id not in ("met", "dal", "la", "atz", "bc", "sf"):
+        raise HTTPException(status_code=400, detail="Unsupported venue ID")
     graph = getattr(request.app.state, "crowd_graph", None)
     if graph is None:
         return {"error": "Crowd agent not ready"}
@@ -43,7 +50,7 @@ async def analyze_crowd(venue_id: str, request: Request):
             "user_query": f"Analyze crowd at {venue_id}", "venue_id": venue_id,
             "messages":[], "crowd_data":{}, "density_scores":{},
             "bottlenecks":[], "recommendations":[], "risk_level":"LOW", "response":"",
-        }, config={"configurable":{"thread_id":str(uuid.uuid4())}})
+        }, config={"configurable":{"thread_id":str(uuid.uuid4()), "api_key": x_gemini_api_key}})
         return {"venue_id":venue_id,"analysis":result.get("response"),"risk_level":result.get("risk_level"),"bottlenecks":result.get("bottlenecks",[])}
     except Exception as e:
         return {"error": str(e)}

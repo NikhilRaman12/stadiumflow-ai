@@ -219,7 +219,7 @@
   <!-- ── PAGES ── -->
 
   <!-- PAGE: ARIA CHAT -->
-  <div class="page active" id="page-aria" style="flex-direction:column;">
+  <div class="page active" id="page-aria" role="tabpanel" tabindex="0" aria-label="ARIA Chat Assistant" style="flex-direction:column;">
     <div class="chat-container" style="display:flex;flex-direction:column;flex:1;">
       <div class="chat-header">
         <div style="display:flex;align-items:center;">
@@ -266,7 +266,7 @@
   </div>
 
   <!-- PAGE: MATCH DAY -->
-  <div class="page" id="page-match">
+  <div class="page" id="page-match" role="tabpanel" tabindex="0" aria-label="Matchday Services and Live Feed">
     <div class="page-inner">
       <!-- Live match widget -->
       <div class="match-hero">
@@ -345,7 +345,7 @@
   </div>
 
   <!-- PAGE: ECO SCORE -->
-  <div class="page" id="page-eco">
+  <div class="page" id="page-eco" role="tabpanel" tabindex="0" aria-label="Sustainability EcoScore Calculator">
     <div class="page-inner">
       <div class="eco-hero">
         <div style="font-size:0.7rem;font-weight:600;color:var(--brand-emerald);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">🌱 Your Matchday EcoScore</div>
@@ -376,7 +376,7 @@
           <button class="btn btn-outline btn-sm" onclick="setTravel('shuttle','🚌 Shuttle')">🚐 Shuttle</button>
         </div>
         <div style="margin-top:12px;">
-          <label style="font-size:0.75rem;color:var(--text-tertiary);display:block;margin-bottom:4px;">Distance to stadium (km)</label>
+          <label for="distanceSlider" style="font-size:0.75rem;color:var(--text-tertiary);display:block;margin-bottom:4px;">Distance to stadium (km)</label>
           <input type="range" id="distanceSlider" min="1" max="100" value="25" oninput="updateDistance(this.value)"/>
           <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;"><span id="distanceVal">25</span> km</div>
         </div>
@@ -407,7 +407,7 @@
   </div>
 
   <!-- PAGE: TRANSPORT -->
-  <div class="page" id="page-transport">
+  <div class="page" id="page-transport" role="tabpanel" tabindex="0" aria-label="Live Transport and Routing Details">
     <div class="page-inner">
       <div class="alert alert-info" style="font-size:0.8rem;">
         <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;"></i>
@@ -472,7 +472,7 @@
   </div>
 
   <!-- PAGE: ACCESS -->
-  <div class="page" id="page-access">
+  <div class="page" id="page-access" role="tabpanel" tabindex="0" aria-label="Inclusive Accessibility Navigation Details">
     <div class="page-inner">
       <div style="background:linear-gradient(135deg,rgba(16,185,129,0.1),transparent);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-xl);padding:20px;text-align:center;">
         <div style="font-size:2rem;margin-bottom:8px;">♿</div>
@@ -528,10 +528,10 @@
 </div>
 
 <!-- ── SETTINGS SHEET ── -->
-<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
   <div class="settings-sheet">
     <div class="sheet-handle"></div>
-    <h3 style="margin-bottom:20px;font-size:1.1rem;">⚙️ Settings</h3>
+    <h3 id="settingsHeading" style="margin-bottom:20px;font-size:1.1rem;">⚙️ Settings</h3>
     <div style="display:flex;flex-direction:column;gap:16px;">
       <div>
         <label for="apiKeyInput" style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Gemini API Key</label>
@@ -593,16 +593,74 @@
     document.getElementById('venueLabel').textContent = VENUE_NAMES[venueId] || venueId;
     updateAIPill();
     animateEcoCircle(72);
+    connectWebSocket();
     if (!apiKey) setTimeout(() => openSettings(), 800);
+    
+    // Add escape key handler for modal close
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeSettings();
+      }
+    });
   }
 
   function updateAIPill() {
     const pill = document.getElementById('aiPill');
     if (apiKey) {
-      pill.textContent = '● AI Live'; pill.className = 'ai-pill live';
+      pill.textContent = '● Live AI Mode'; pill.className = 'ai-pill live';
     } else {
-      pill.textContent = '● Demo Mode'; pill.className = 'ai-pill demo';
+      pill.textContent = '● Simulation Mode'; pill.className = 'ai-pill demo';
     }
+  }
+
+  // ── WebSockets Connect ─────────────────────────────────────────────
+  function connectWebSocket() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+    console.log('Connecting Fan App to WebSocket:', wsUrl);
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('Fan App WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'crowd:update') {
+          updateCrowdMapWithRealData(msg.data);
+        }
+      } catch (err) {
+        console.error('WS parsing error', err);
+      }
+    };
+
+    ws.onclose = () => {
+      setTimeout(connectWebSocket, 5000);
+    };
+  }
+
+  function updateCrowdMapWithRealData(data) {
+    const venueData = data.venues?.[venueId];
+    if (!venueData) return;
+    
+    const zones = document.querySelectorAll('.zone-cell');
+    zones.forEach(z => {
+      const rawText = z.textContent.trim().toLowerCase();
+      for (let key in venueData) {
+        if (rawText.includes(key) || key.includes(rawText)) {
+          const pct = venueData[key].density;
+          const cls = pct<50?'zone-low':pct<75?'zone-medium':pct<90?'zone-high':'zone-critical';
+          
+          z.className = 'zone-cell ' + cls;
+          
+          // Preserving inner layout structures if any
+          const cleanName = z.querySelector('.zone-name')?.textContent || z.textContent.split('%')[0].replace(/\d+/g,'').trim();
+          z.innerHTML = `<span class="zone-name" style="font-weight:700;">${cleanName}</span><br><b>${pct}%</b>`;
+          break;
+        }
+      }
+    });
   }
 
   // ── Navigation ───────────────────────────────────────────────────
@@ -640,48 +698,17 @@
     showTyping();
 
     try {
-      let responseText;
-      // 1. Try backend API first (routes to FastAPI, LangGraph, and GraphRAG)
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/chat`, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({message:text, session_id:getSession(), venue_id:venueId, role, context:{}})
-        });
-        if (res.ok) {
-          const data = await res.json();
-          responseText = data.response;
-        }
-      } catch(e) {
-        console.warn('Backend API connection failed, using client fallback', e);
-      }
-
-      // 2. Direct client-side Gemini fallback (if client has an API key stored)
-      if (!responseText && apiKey) {
-        try {
-          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({contents:[{role:'user',parts:[{text:`You are ARIA, FIFA World Cup 2026 AI assistant at ${VENUE_NAMES[venueId]}. User: ${text}`}]}],generationConfig:{temperature:0.75,maxOutputTokens:400}})
-          });
-          if (r.ok) {
-            const d = await r.json();
-            responseText = d?.candidates?.[0]?.content?.parts?.[0]?.text;
-          }
-        } catch(e) {
-          console.error('Direct Gemini call failed', e);
-        }
-      }
-
-      // 3. Simulated response fallback
-      if (!responseText) {
-        responseText = getSimulatedResponse(text);
-      }
+      const res = await AIEngine.chat(
+        [{role:'user', text}], 
+        role === 'volunteer' ? 'aria_volunteer' : 'aria_fan', 
+        { sessionId: getSession(), venueId }
+      );
       removeTyping();
-      appendMessage('ai', responseText);
-      chatHistory.push({role:'assistant', content:responseText});
+      appendMessage('ai', res.text);
+      chatHistory.push({role:'assistant', content:res.text});
     } catch(err) {
       removeTyping();
-      appendMessage('ai', '⚠️ Connection error. ' + (apiKey ? 'Check your API key.' : 'Add Gemini API key in Settings for live responses.'));
+      appendMessage('ai', '⚠️ Connection error. Please try again.');
     }
   }
 
@@ -727,15 +754,30 @@
   function updateDistance(v) { distance=parseInt(v); document.getElementById('distanceVal').textContent=v; }
 
   async function calculateEco() {
-    const factors = {metro:0.041,bus:0.089,car_petrol:0.171,walk:0.0,bike:0.0,shuttle:0.072};
-    const co2 = (factors[travelMode]||0.1)*distance;
-    ecoScore  = Math.max(0, Math.round(100-(co2/20)*100));
-    const pts = Math.round(ecoScore/2);
-    document.getElementById('co2Val').textContent = co2.toFixed(1);
-    document.getElementById('ecoScoreNum').textContent = ecoScore;
-    document.getElementById('ecoPoints').textContent = pts;
-    animateEcoCircle(ecoScore);
-    showToast(`EcoScore updated: ${ecoScore}/100 · ${pts} pts earned`,'success');
+    const res = await AIEngine.getEcoAdvice({
+      transport: travelMode,
+      distance: distance,
+      groupSize: 1,
+      food: 'local_food'
+    });
+    if (res.success && res.data) {
+      ecoScore = res.data.eco_score;
+      document.getElementById('co2Val').textContent = res.data.co2_kg.toFixed(1);
+      document.getElementById('ecoScoreNum').textContent = ecoScore;
+      document.getElementById('ecoPoints').textContent = res.data.eco_points;
+      animateEcoCircle(ecoScore);
+      showToast(`EcoScore updated: ${ecoScore}/100 · ${res.data.eco_points} pts earned`,'success');
+    } else {
+      const factors = {metro:0.041,bus:0.089,car_petrol:0.171,walk:0.0,bike:0.0,shuttle:0.072};
+      const co2 = (factors[travelMode]||0.1)*distance;
+      ecoScore  = Math.max(0, Math.round(100-(co2/20)*100));
+      const pts = Math.round(ecoScore/2);
+      document.getElementById('co2Val').textContent = co2.toFixed(1);
+      document.getElementById('ecoScoreNum').textContent = ecoScore;
+      document.getElementById('ecoPoints').textContent = pts;
+      animateEcoCircle(ecoScore);
+      showToast(`EcoScore calculated: ${ecoScore}/100 · ${pts} pts earned`,'success');
+    }
   }
 
   function animateEcoCircle(score) {
@@ -759,32 +801,39 @@
     resp.style.display='block';
     resp.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><div class="spinner"></div> Getting AI recommendation…</div>';
     lucide.createIcons({nodes:[resp]});
-    const text = await getAIText('Best transport option from MetLife Stadium right now after the match?');
-    resp.innerHTML = `<div style="font-size:0.875rem;line-height:1.6;color:var(--text-secondary);">${text.replace(/\n/g,'<br>')}</div>`;
+    const res = await AIEngine.generateContent('Best transport option from MetLife Stadium right now after the match?', 'aria_fan', { venueId });
+    resp.innerHTML = `<div style="font-size:0.875rem;line-height:1.6;color:var(--text-secondary);">${res.text.replace(/\n/g,'<br>')}</div>`;
   }
 
   async function getAIText(prompt) {
-    if (apiKey) {
-      try {
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:300}})});
-        const d = await r.json();
-        return d?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-      } catch(e){ return getSimulatedResponse(prompt); }
+    const res = await AIEngine.generateContent(prompt, role === 'volunteer' ? 'aria_volunteer' : 'aria_fan', { venueId });
+    if (res.success) {
+      return res.text;
     }
     return getSimulatedResponse(prompt);
   }
 
   // ── Settings ─────────────────────────────────────────────────────
   function openSettings() {
+    previousFocusedElement = document.activeElement;
     document.getElementById('apiKeyInput').value = apiKey;
     document.getElementById('venueSelect').value = venueId;
     document.getElementById('roleSelect').value  = role;
     document.getElementById('backendUrlInput').value = backendUrl;
     document.getElementById('settingsOverlay').classList.add('open');
-    lucide.createIcons();
+    
+    setTimeout(() => {
+      document.getElementById('apiKeyInput').focus();
+      trapFocus('settingsOverlay');
+    }, 100);
   }
 
-  function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+  function closeSettings() {
+    document.getElementById('settingsOverlay').classList.remove('open');
+    if (previousFocusedElement) {
+      previousFocusedElement.focus();
+    }
+  }
 
   function saveSettings() {
     apiKey     = document.getElementById('apiKeyInput').value.trim();
@@ -793,6 +842,7 @@
     backendUrl = document.getElementById('backendUrlInput').value.trim();
 
     if (apiKey) localStorage.setItem('stadiumiq_gemini_key', apiKey);
+    else localStorage.removeItem('stadiumiq_gemini_key');
     localStorage.setItem('stadiumiq_venue', venueId);
     localStorage.setItem('stadiumiq_role',  role);
     localStorage.setItem('stadiumiq_backend_url', backendUrl);
@@ -806,6 +856,21 @@
   }
 
   function updateVenue(v) { venueId = v; }
+
+  // Modal Focus Trap Helper
+  function trapFocus(modalId) {
+    const modal = document.getElementById(modalId);
+    const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    modal.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) { if (document.activeElement === first) { last.focus(); e.preventDefault(); } }
+        else { if (document.activeElement === last) { first.focus(); e.preventDefault(); } }
+      }
+    });
+  }
 
   // ── Toast ─────────────────────────────────────────────────────────
   function showToast(msg, type='info') {
@@ -825,8 +890,9 @@
     return s;
   }
 
-  // ── Live crowd map update ─────────────────────────────────────────
+  // ── Fallback crowd map update ─────────────────────────────────────
   function updateCrowdMap() {
+    if (ws && ws.readyState === WebSocket.OPEN) return;
     const zones = document.querySelectorAll('.zone-cell');
     zones.forEach(z => {
       const pct = Math.max(20,Math.min(99, parseInt(z.textContent.match(/\d+/)?.[0]||50) + (Math.random()>0.5?2:-2)));

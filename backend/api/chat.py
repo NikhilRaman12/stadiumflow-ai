@@ -6,7 +6,7 @@ Supports SSE streaming for progressive responses.
 """
 from __future__ import annotations
 import logging, uuid
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Header
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -34,7 +34,7 @@ class ChatResponse(BaseModel):
 
 
 @router.post("", response_model=ChatResponse)
-async def chat(body: ChatRequest, request: Request):
+async def chat(body: ChatRequest, request: Request, x_gemini_api_key: Optional[str] = Header(None)):
     """Send a message to the ARIA AI assistant (Fan or Ops mode)."""
     role_to_graph = {
         "fan":       ("fan_graph",  "fan-assistant-agent"),
@@ -49,7 +49,7 @@ async def chat(body: ChatRequest, request: Request):
         raise HTTPException(503, "AI agent not ready - startup may be in progress")
 
     try:
-        config  = {"configurable": {"thread_id": body.session_id}}
+        config  = {"configurable": {"thread_id": body.session_id, "api_key": x_gemini_api_key}}
         if body.role in ("fan","volunteer"):
             state = {
                 "user_query": body.message, "venue_id": body.venue_id,
