@@ -61,5 +61,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" || exit 1
 
-# Use main.py as entrypoint (production app)
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+# Use run_local.py as entrypoint (slim, production-ready runner)
+CMD ["python", "-m", "uvicorn", "run_local:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
