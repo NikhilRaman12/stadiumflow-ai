@@ -414,6 +414,10 @@ async def root():
         return FileResponse(index)
     return {"message": "StadiumIQ API - visit /api/docs"}
 
+@app.get("/index.html")
+async def index_html():
+    return await root()
+
 @app.get("/fan")
 async def fan_app():
     f = os.path.join(frontend_path, "fan-app.html")
@@ -421,12 +425,21 @@ async def fan_app():
         return FileResponse(f)
     return JSONResponse(status_code=404, content={"error": "fan-app.html not found"})
 
+@app.get("/fan-app.html")
+async def fan_app_html():
+    return await fan_app()
+
 @app.get("/ops")
 async def ops_dash():
     f = os.path.join(frontend_path, "ops-dashboard.html")
     if os.path.exists(f):
         return FileResponse(f)
     return JSONResponse(status_code=404, content={"error": "ops-dashboard.html not found"})
+
+@app.get("/ops-dashboard.html")
+async def ops_dash_html():
+    return await ops_dash()
+
 
 
 

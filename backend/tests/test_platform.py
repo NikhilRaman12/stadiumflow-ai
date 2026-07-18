@@ -166,11 +166,21 @@ def test_root_html_routes(client):
     response = client.get("/")
     assert response.status_code == 200
     
+    response = client.get("/index.html")
+    assert response.status_code == 200
+    
     response = client.get("/fan")
+    assert response.status_code == 200
+    
+    response = client.get("/fan-app.html")
     assert response.status_code == 200
     
     response = client.get("/ops")
     assert response.status_code == 200
+    
+    response = client.get("/ops-dashboard.html")
+    assert response.status_code == 200
+
 
 def test_global_exception_trigger(monkeypatch):
     """Verify that unhandled exceptions are caught by the middleware and returned as JSON."""
